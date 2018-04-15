@@ -154,7 +154,7 @@ summary(data.frame(curso.df))
 
 summarywp <- function(x) {cbind(freq = table(x), percentage = round(prop.table(table(x))*100, digits = 1))}
 out <- summarywp(curso.df)
-write.table(out, file="sintese_curso.csv", sep=", ", quote = FALSE, row.names = TRUE, col.names = TRUE)
+write.table(out, file="reports/sintese_curso.csv", sep=", ", quote = FALSE, row.names = TRUE, col.names = TRUE)
 
 # ###############################################################################################################
 # 4) Analisem a variável Turno. Qual é o predominante? JUSTIFIQUEM!
@@ -170,7 +170,7 @@ write.table(out, file="sintese_curso.csv", sep=", ", quote = FALSE, row.names = 
 #CODE: Using summary function
 summary(data.frame(turno.df))
 out <- summarywp(turno.df)
-write.table(out, file="sintese_turno.csv", sep=", ", quote = FALSE, row.names = TRUE, col.names = TRUE)
+write.table(out, file="reports/sintese_turno.csv", sep=", ", quote = FALSE, row.names = TRUE, col.names = TRUE)
 
 # ###############################################################################################################
 # 5) Analisem a variável Ensino médio. A direção da TYU acredita que a maioria absoluta dos seus
@@ -191,7 +191,7 @@ write.table(out, file="sintese_turno.csv", sep=", ", quote = FALSE, row.names = 
 #CODE: Using summary function
 summary(data.frame(ensinomedio.df))
 out <- summarywp(ensinomedio.df)
-write.table(out, file="sintese_ensinomedio.csv", sep=", ", quote = FALSE, row.names = TRUE, col.names = TRUE)
+write.table(out, file="reports/sintese_ensinomedio.csv", sep=", ", quote = FALSE, row.names = TRUE, col.names = TRUE)
 
 # ###############################################################################################################
 # 6) Analisem a variável Opinião. Os alunos da TYU estão satisfeitos com os seus cursos?
@@ -219,7 +219,7 @@ write.table(out, file="sintese_ensinomedio.csv", sep=", ", quote = FALSE, row.na
 #CODE: Using summary function
 summary(data.frame(opiniao.df))
 out <- summarywp(opiniao.df)
-write.table(out, file="sintese_opiniao.csv", sep=", ", quote = FALSE, row.names = TRUE, col.names = TRUE)
+write.table(out, file="reports/sintese_opiniao.csv", sep=", ", quote = FALSE, row.names = TRUE, col.names = TRUE)
 
 # ###############################################################################################################
 # 7) Façam uma descrição da variável Renda. Em estudos anteriores pelo menos três quartos dos
@@ -258,7 +258,7 @@ sum(tyu$Renda < 2700/965, na.rm = TRUE)/sum(tyu$Renda > 0, na.rm = TRUE)
 summary(cut(tyu$Renda, breaks = 2*(0:13)))
 summary(tyu$Renda)
 
-png("hist_tyu_renda.png")
+png("plots/hist_tyu_renda.png")
 hist(tyu$Renda, breaks = 2*(0:13))
 dev.off()
 # ###############################################################################################################
@@ -292,7 +292,7 @@ summary(tyu$`Nota ENEM`)
 summary(cut(tyu$`Nota ENEM`, breaks = 200*(0:6)))
 summary(cut(tyu$`Nota ENEM`, breaks = 200*(0:6)))/sum(tyu$`Nota ENEM` > 0)
 
-png("hist_tyu_enem.png")
+png("plots/hist_tyu_enem.png")
 hist(tyu$`Nota ENEM`, breaks = 200*(0:6))
 dev.off()
 # ###############################################################################################################
@@ -314,7 +314,7 @@ dev.off()
 summary(tyu$IAA)
 sum(tyu$IAA >= 5, na.rm = TRUE)/sum(tyu$IAA > 0, na.rm = TRUE)
 
-png("hist_tyu_IAA.png")
+png("plots/hist_tyu_IAA.png")
 hist(tyu$IAA, breaks = 0:10)
 dev.off()
 
@@ -345,7 +345,7 @@ dev.off()
 
 #CODE
 out <- format(round(prop.table(table(tyu.df$Curso, tyu.df$Opinião),1)*100,1), digits = 2)
-write.table(out, file="prop_tyu_Curso_Opiniao.csv", sep=", ", quote = FALSE)
+write.table(out, file="reports/prop_tyu_Curso_Opiniao.csv", sep=", ", quote = FALSE)
 
 # ###############################################################################################################
 # 11) Na pesquisa do item 10 não foi identificada associação entre o turno e o curso escolhido pelo
@@ -369,7 +369,7 @@ write.table(out, file="prop_tyu_Curso_Opiniao.csv", sep=", ", quote = FALSE)
 # Química    "37.1" "25.8"   "37.1"
 
 out <- format(round(prop.table(table(tyu.df$Curso, tyu.df$Turno),1)*100,1), digits = 2)
-write.table(out, file="prop_tyu_Curso_Turno.csv", sep=", ", quote = FALSE)
+write.table(out, file="reports/prop_tyu_Curso_Turno.csv", sep=", ", quote = FALSE)
 
 # ###############################################################################################################
 # 12) Na pesquisa do item 10 os alunos do turno noturno queixaram-se muito dos seus cursos, os
@@ -393,7 +393,7 @@ write.table(out, file="prop_tyu_Curso_Turno.csv", sep=", ", quote = FALSE)
 # Noturno  "0.02"      "0.00"       "0.00"             "0.81"           "0.17" 
 
 out <- format(round(prop.table(table(tyu.df$Turno, tyu.df$Opinião),1)*100,1),digits = 2)
-write.table(out, file="prop_tyu_Turno_Opiniao.csv", sep=", ", quote = FALSE)
+write.table(out, file="reports/prop_tyu_Turno_Opiniao.csv", sep=", ", quote = FALSE)
 
 # ###############################################################################################################
 # 13) Há um rumor entre os professores da TYU que os cursos de Engenharia Elétrica e Química, por
@@ -437,7 +437,7 @@ write.table(out, file="prop_tyu_Turno_Opiniao.csv", sep=", ", quote = FALSE)
 # [1] 73.83
 
 out <- format(round(prop.table(table(tyu.df$Curso, tyu.df$`Ensino médio`),1)*100,1), digits = 2)
-write.table(out, file="prop_tyu_Curso_EnsinoMedio.csv", sep=", ", quote = FALSE)
+write.table(out, file="reports/prop_tyu_Curso_EnsinoMedio.csv", sep=", ", quote = FALSE)
 
 # ###############################################################################################################
 # 14) Na pesquisa do item 10 constatou-se que os alunos mais abastados eram indiferentes, os mais
@@ -475,12 +475,12 @@ write.table(out, file="prop_tyu_Curso_EnsinoMedio.csv", sep=", ", quote = FALSE)
 # Satisfeito         " 22.1" "  5.9" "  0.0" "  0.0"
 
 out <- format(round(prop.table(table(tyu.df$Opinião, cut(tyu$Renda, breaks = 2*(0:13))),2)*100,2), digits = 2)
-write.table(out, file="prop_tyu_Opiniao_Renda_1.csv", sep=", ", quote = FALSE)
+write.table(out, file="reports/prop_tyu_Opiniao_Renda_1.csv", sep=", ", quote = FALSE)
 out <- format(round(prop.table(table(tyu.df$Opinião, cut(tyu$Renda, breaks = 6*(0:4))),2)*100,2), digits = 2)
-write.table(out, file="prop_tyu_Opiniao_Renda_2.csv", sep=", ", quote = FALSE)
+write.table(out, file="reports/prop_tyu_Opiniao_Renda_2.csv", sep=", ", quote = FALSE)
 
 tb <- round(prop.table(table(tyu.df$Opinião, cut(tyu$Renda, breaks = 2*(0:13))),2)*100,2)
-png("barplot_tyu_Opiniao_Renda.png", height=400, width=800)
+png("plots/barplot_tyu_Opiniao_Renda.png", height=400, width=800)
 barplot(tb, main="Opinião conforme renda familiar",
         xlab="Renda familiar em salários mínimos", col=gray(seq(0.1,0.9,length=5)),
         legend = rownames(tb), width = 2)
@@ -508,9 +508,9 @@ dev.off()
 
 tb <- round(prop.table(table(tyu.df$Curso, cut(tyu$IAA, breaks = (0:10))),2)*100,1)
 out <- format(tb, digits = 2)
-write.table(out, file="prop_tyu_Curso_IAA.csv", sep=", ", quote = FALSE)
+write.table(out, file="reports/prop_tyu_Curso_IAA.csv", sep=", ", quote = FALSE)
 
-png("barplot_tyu_Curso_IAA.png", height=400, width=800)
+png("plots/barplot_tyu_Curso_IAA.png", height=400, width=800)
 barplot(tb, main="IAA por curso",
         xlab="Nota IAA (de 0 a 10)", col=gray(seq(0.1,0.9,length=6)),
         legend = rownames(tb), width = 2)
@@ -527,7 +527,7 @@ dev.off()
 # Sim, há correspondência entres estas variáveis. Através do gráfico de dispersão percebe-se que quanto maior a nota do ENEM maior
 # tende a ser o IAA e vice-versa. 
 
-png("scatter_tyu_IAA_ENEM.png")
+png("plots/scatter_tyu_IAA_ENEM.png")
 plot(tyu$`Nota ENEM`, tyu$IAA, main="Nota ENEM pela nota IAA", xlab="Nota ENEM ", ylab="Nota IAA ", pch=19)
 dev.off()
 
@@ -548,7 +548,7 @@ dev.off()
 # (1e+03,1.1e+03] " 0.00" " 0.00" " 0.00" " 0.00" " 0.00" " 0.00" " 0.00" "33.33" "66.67" " 0.00"
 
 out <- format(round(prop.table(table(cut(tyu$`Nota ENEM`, breaks = 100*(0:11)), cut(tyu$IAA, breaks = (0:10))),1)*100,2), digits = 2)
-write.table(out, file="prop_tyu_ENEM_IAA.csv", sep=", ", quote = FALSE)
+write.table(out, file="reports/prop_tyu_ENEM_IAA.csv", sep=", ", quote = FALSE)
 
 # ###############################################################################################################
 # Quarta Parte - Análise em conjunto de MAIS de duas variáveis
@@ -618,7 +618,7 @@ for(i in 1:nrow(curso.var)) {
   print(cat(row," :::"), sep = " ", fill = FALSE, labels = NULL, append = FALSE)
   print.table(out)
   
-  filename <- paste("prop_tyu_Curso_Opiniao_",row,".csv", sep="")
+  filename <- paste("reports/prop_tyu_Curso_Opiniao_",row,".csv", sep="")
   write.table(out, file=filename, sep=", ", quote = FALSE)
 
   readline("Press <return to continue") 
@@ -629,9 +629,9 @@ for(i in 1:nrow(curso.var)) {
 
 tb <- round(prop.table(table(subset(tyu.df[c(1:5)], Turno == "Integral", select = c(Opinião, Curso))),2)*100,1)
 out <- format(tb,digits = 2)
-write.table(out, file="prop_tyu_Curso_Opiniao_Integral.csv", sep=", ", quote = FALSE)
+write.table(out, file="reports/prop_tyu_Curso_Opiniao_Integral.csv", sep=", ", quote = FALSE)
 
-png("prop_tyu_Curso_Opiniao_Integral.png", height=400, width=800)
+png("plots/prop_tyu_Curso_Opiniao_Integral.png", height=400, width=800)
 barplot(tb, main="Opinião sobre o Curso (Alunos do turno Integral)",
         xlab="Opinião", col=gray(seq(0.1,0.9,length=5)),
         legend = rownames(tb), width = 2)
@@ -639,9 +639,9 @@ dev.off()
 
 tb <- round(prop.table(table(subset(tyu.df[c(1:5)], Turno == "Diurno", select = c(Opinião, Curso))),2)*100,1)
 out <- format(tb,digits = 2)
-write.table(out, file="prop_tyu_Curso_Opiniao_Diurno.csv", sep=", ", quote = FALSE)
+write.table(out, file="reports/prop_tyu_Curso_Opiniao_Diurno.csv", sep=", ", quote = FALSE)
 
-png("prop_tyu_Curso_Opiniao_Diurno.png", height=400, width=800)
+png("plots/prop_tyu_Curso_Opiniao_Diurno.png", height=400, width=800)
 barplot(tb, main="Opinião sobre o Curso (Alunos do turno Diurno)",
         xlab="Opinião", col=gray(seq(0.1,0.9,length=5)),
         legend = rownames(tb), width = 2)
@@ -649,9 +649,9 @@ dev.off()
 
 tb <- round(prop.table(table(subset(tyu.df[c(1:5)], Turno == "Noturno", select = c(Opinião, Curso))),2)*100,1)
 out <- format(tb,digits = 2)
-write.table(out, file="prop_tyu_Curso_Opiniao_Noturno.csv", sep=", ", quote = FALSE)
+write.table(out, file="reports/prop_tyu_Curso_Opiniao_Noturno.csv", sep=", ", quote = FALSE)
 
-png("prop_tyu_Curso_Opiniao_Noturno.png", height=400, width=800)
+png("plots/prop_tyu_Curso_Opiniao_Noturno.png", height=400, width=800)
 barplot(tb, main="Opinião sobre o Curso (Alunos do turno Noturno)",
         xlab="Opinião", col=gray(seq(0.1,0.9,length=5)),
         legend = rownames(tb), width = 2)
@@ -780,7 +780,7 @@ for(i in 1:nrow(curso.var)) {
   print(cat(row," :::"), sep = " ", fill = FALSE, labels = NULL, append = FALSE)
   print.table(out)
   
-  filename <- paste("xy_tyu_Renda_Freq_",row,".png", sep="")
+  filename <- paste("plots/xy_tyu_Renda_Freq_",row,".png", sep="")
   png(as.character(filename))
   print(xyplot(df$Renda ~ df$Freq | df$Opinião, iris, pch= 20))
   dev.off()
@@ -896,7 +896,7 @@ print.table(100*tb/nr)
 # são muitas vezes os que tem melhores IAA e dos muito satisfeitos, surpreendentemente, constam os alunos com
 # os IAAs mais baixos.
 
-# > write.table(out, "prop_tyu_Opinião_IAA.txt", sep=", ")
+# > write.table(out, "reports/prop_tyu_Opinião_IAA.txt", sep=", ")
 # > out
 # 
 #                     (0,1]   (1,2]   (2,3]   (3,4]   (4,5]   (5,6]   (6,7]   (7,8]   (8,9]   (9,10] 
@@ -908,9 +908,9 @@ print.table(100*tb/nr)
 
 tb <- round(prop.table(table(tyu.df$Opinião, cut(tyu$IAA, breaks = (0:10))),2)*100,1)
 out <- format(tb, digits = 2)
-write.table(out, file="prop_tyu_Opinião_IAA.csv", sep=", ", quote = FALSE)
+write.table(out, file="reports/prop_tyu_Opinião_IAA.csv", sep=", ", quote = FALSE)
 
-png("prop_tyu_Opinião_IAA.png", height=400, width=800)
+png("plots/prop_tyu_Opinião_IAA.png", height=400, width=800)
 barplot(tb, main="Opinião sobre o Curso por IAA",
         xlab="Opinião", col=gray(seq(0.1,0.9,length=5)),
         legend = rownames(tb), width = 2)
@@ -927,7 +927,7 @@ dev.off()
 # chega a 67% para entre 12 e 16 s.m. e 100% para acima de 20 s.m.
 # 
 # > out <- format(round(prop.table(table(cut(tyu$Renda, breaks = 2*(0:13)), cut(tyu$IAA, breaks = (0:10))),1)*100,2), digits = 2)
-# > write.table(out, "prop_tyu_Renda_IAA.txt", sep=", ")
+# > write.table(out, "reports/prop_tyu_Renda_IAA.txt", sep=", ")
 # > out
 # 
 #           (0,1]    (1,2]    (2,3]    (3,4]    (4,5]    (5,6]    (6,7]    (7,8]    (8,9]    (9,10]  
@@ -945,16 +945,16 @@ dev.off()
 # (22,24] "  0.00" "  0.00" "  0.00" "  0.00" "  0.00" "100.00" "  0.00" "  0.00" "  0.00" "  0.00"
 # (24,26] "  0.00" "  0.00" "  0.00" "  0.00" "  0.00" "100.00" "  0.00" "  0.00" "  0.00" "  0.00"
 
-png("box_tyu_Renda_IAA.png", height=400, width=800)
+png("plots/box_tyu_Renda_IAA.png", height=400, width=800)
 boxplot(tyu$IAA ~ tyu$Renda,main="Comparativo Renda por IAA",
         xlab="Renda em salários mínimos", ylab="IAA")
 dev.off()
 
 tb <- round(prop.table(table(cut(tyu$IAA, breaks = (2:9)), cut(tyu$Renda, c(1, 2, 6, 25))),2)*100,2)
 out <- format(tb, digits = 2)
-write.table(out, file="prop_tyu_Renda_IAA.csv", sep=", ", quote = FALSE)
+write.table(out, file="reports/prop_tyu_Renda_IAA.csv", sep=", ", quote = FALSE)
 
-png("prop_tyu_Renda_IAA.png", height=400, width=800)
+png("plots/prop_tyu_Renda_IAA.png", height=400, width=800)
 barplot(tb, main="Comparativo Renda por IAA",
         xlab="IAA", col=gray(seq(0.0,1.0,length=7)),
         legend = rownames(tb), width = 2, beside = TRUE)
@@ -973,7 +973,7 @@ dev.off()
 # (20,24] "  0" "100" 
 
 out <- format(round(prop.table(table(cut(tyu$Renda, breaks = 4*(0:6)), cut(tyu$IAA, breaks = 5*(0:2))),1)*100,2), digits = 2)
-write.table(out, "prop_tyu_Renda_IAA.txt", sep=", ")
+write.table(out, "reports/prop_tyu_Renda_IAA.txt", sep=", ")
 
 
 print("Química:Integral:>=3sm:")
