@@ -1,0 +1,853 @@
+clearhistory <- function() {
+  write("", file=".blank")
+  loadhistory(".blank")
+  unlink(".blank")
+}
+#clearhistory()
+
+closeAllConnections()
+rm(list=ls())
+
+library(readxl)
+tyu <- read_excel("TYU07.xlsx")
+#View(tyu)
+#str(tyu) #show structure
+#summary(tyu)
+#fix() #show data
+
+# ##############################################################################################################
+# Primeira Parte - Pré-análise dos dados
+# 1) Quantos dados perdidos há em cada variável? O percentual de dados perdidos em relação ao total
+# é aceitável? JUSTIFIQUEM!
+# 
+# Resposta:
+# Os percentuais variam de 0% (para as colunas de nota no ENEM e de IAA) a 0,29% no pior caso que foi da 
+# coluna 'Ensino Médio'. Considerando que há poucas opções de estado para cada dado e quando numérico (no caso
+# da renda) há uma faixa bem definida, pode-se considerar que índices inferioes a 0,3% são bem baixos, não
+# afetando significativamente a análise. Os índices são detalhados a seguir:
+# Missing data in column 'curso': 20 (0.2%)
+# Missing data in column 'turno': 26 (0.26%)
+# Missing data in column 'ensinomedio': 29 (0.29%)
+# Missing data in column 'opiniao': 25 (0.25%)
+# Missing data in column 'renda': 26 (0.26%)
+# Missing data in column 'enem': 0 (0%)
+# Missing data in column 'iaa': 0 (0%)
+
+#CODE: Fixing data by matching using data templates
+curso.var <- data.frame(A = c("Computação", "Produção", "Elétrica", "Civil", "Química", "Mecânica"), stringsAsFactors = FALSE)
+curso.df <- curso.var$A[charmatch(substr(data.frame(A = tyu$Curso)$A,1,3), substr(curso.var$A,1,3))]
+turno.var <- data.frame(A = c("Diurno", "Integral", "Noturno"), stringsAsFactors = FALSE)
+turno.df <- turno.var$A[charmatch(substr(data.frame(A = tyu$Turno)$A,1,5), substr(turno.var$A,1,5))]
+ensinomedio.var <- data.frame(A = c("Maior parte em particular", "Maior parte em pública", "Somente em particular", "Somente em pública"), stringsAsFactors = FALSE)
+ensinomedio.df <- ensinomedio.var$A[charmatch(substr(data.frame(A = tyu$'Ensino médio')$A,1,17), substr(ensinomedio.var$A,1,17))]
+opiniao.var <- data.frame(A = c("Indiferente", "Insatisfeito", "Muito insatisfeito", "Muito satisfeito", "Satisfeito"), stringsAsFactors = FALSE)
+opiniao.df <- opiniao.var$A[charmatch(substr(data.frame(A = tyu$Opinião)$A,1,7), substr(opiniao.var$A,1,7))]
+
+#CODE: Create an empty data.frame with same colonms and after it with same number of rows
+tyu.df <- tyu[FALSE,]
+tyu.df[NROW(tyu),] <- NA
+
+#CODE: Copy 'fixed' data to the new data.frame
+tyu.df$Curso <- curso.df
+tyu.df$Turno <- turno.df
+tyu.df$`Ensino médio` <- ensinomedio.df
+tyu.df$Opinião <- opiniao.df
+tyu.df$Renda <- tyu$Renda
+tyu.df$`Nota ENEM` <- tyu$`Nota ENEM`
+tyu.df$IAA <- tyu$IAA
+
+#CODE: Sum of missing data cell by column
+message("Missing data in column 'curso': ",sum(is.na(tyu.df$Curso))," (",100*sum(is.na(tyu.df$Curso))/NROW(tyu.df$Curso),"%)")
+message("Missing data in column 'turno': ",sum(is.na(tyu.df$Turno))," (",100*sum(is.na(tyu.df$Turno))/NROW(tyu.df$Turno),"%)")
+message("Missing data in column 'ensinomedio': ",sum(is.na(tyu.df$`Ensino médio`))," (",100*sum(is.na(tyu.df$`Ensino médio`))/NROW(tyu.df$`Ensino médio`),"%)")
+message("Missing data in column 'opiniao': ",sum(is.na(tyu.df$Opinião))," (",100*sum(is.na(tyu.df$Opinião))/NROW(tyu.df$Opinião),"%)")
+message("Missing data in column 'renda': ",sum(is.na(tyu.df$Renda))," (",100*sum(is.na(tyu.df$Renda))/NROW(tyu.df$Renda),"%)")
+message("Missing data in column 'enem': ",sum(is.na(tyu.df$`Nota ENEM`))," (",100*sum(is.na(tyu.df$`Nota ENEM`))/NROW(tyu.df$`Nota ENEM`),"%)")
+message("Missing data in column 'iaa': ",sum(is.na(tyu.df$IAA))," (",100*sum(is.na(tyu.df$IAA))/NROW(tyu.df$IAA),"%)")
+
+###############################################################################################################
+# 2) Quantos e quais são os erros de registro nas variáveis? O que vocês acham que precisa ser feito
+# para diminuir tais erros nas próximas pesquisas? JUSTIFIQUEM!
+# OBS.: CORRIJAM os erros de registro antes de passar para a próxima etapa.
+# Resposta:
+#   Os erros observados foram de subtração da quantidade de caracteres dos nomes das categorias. São ocorrências típicas
+# de erro de digitação quando o digitador procura resumir as entradas reduzindo a quantidade de caracteres ou poderia 
+# ser devido a importação de sistemas com restrições de caracteres. Para reduzir este tipo de problema o sistema
+# poderia ser unificado (evitando o problema de compatibilidade de tamanhos de sentenças) e com opções definidas 
+# para seleção no lugar de possuir campos de livre digitação.
+# A seguir resultados de consultas por dados com erro de registro. Para as colunas de dados categóricos foram obtidos
+# sumários onde a linha "Other" veio a agrupar os dados com erro de registro variando de 131 a 233 registros no pior 
+# caso. Importante ressaltar que não se somam aqui os dados faltantes, item discutido anteriormente neste relatório.
+# Resultados obtidos para variáveis categóricas:
+# Unmatching data in column 'curso': (Other) : 233  
+# Unmatching data in column 'turno': (Other) : 131  
+# Unmatching data in column 'ensinomedio': (Other)  : 132  
+# Unmatching data in column 'opiniao': (Other)  : 237  
+# Para as variáveis quantitativas foram feitos sumários dos dados conforme relatório a seguir. Observando as
+# variações, para as três variáveis não se observam discrepâncias. Detalhando, podemos observar que a renda
+# varia entre 1 e 24.56 salários mínimos, não havendo um número negativo que representaria um dado incorreto.
+# Para a coluna IAA observa-se variação correta, entre 0 a 10. No caso das notas no enem, igualmente, estão todas 
+# dentro da faixa esperada que fica entre 0 e 1000.
+
+
+### !!!!!!!!!!!!!! ver questão de notas acima de 1000 e o fato de que não seria normal notas tão baixas (abaixo de 300)
+
+
+# > summary(tyu$Renda)
+#   Min.        1st Qu.   Median        Mean    3rd Qu.     Max.        NA's 
+#   1.000       1.100     1.360         1.781   2.000       24.560      26 
+# > summary(tyu$`Nota ENEM`)
+#    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#    18.0   404.0   502.0   505.2   605.0  1069.0 
+# > summary(tyu$IAA)
+#    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#   1.161   3.999   4.656   4.680   5.353   8.771 
+
+#CODE: Get sum of occurrences of each option (the group 'Other' means the ones that doesn't match with criterea)
+message("Unmatching data in column 'curso': ",summary(data.frame(tyu$Curso), maxsum = 8)[7])
+message("Unmatching data in column 'turno': ",summary(data.frame(tyu$Turno), maxsum = 5)[4])
+message("Unmatching data in column 'ensinomedio': ",summary(data.frame(tyu$`Ensino médio`), maxsum = 6)[5])
+message("Unmatching data in column 'opiniao': ",summary(data.frame(tyu$Opinião), maxsum = 7)[6])
+summary(tyu$Renda)
+summary(tyu$`Nota ENEM`)
+summary(tyu$IAA)
+# ###############################################################################################################
+# Segunda Parte - Análise Individual das variáveis
+# Observem o nível de mensuração das variáveis, lembrem-se de registrar frequências e
+# percentuais em tabelas de frequências ou gráficos, e calculem as medidas de síntese quando
+# apropriado. Ressalte-se que descrição de uma variável quantitativa inclui avaliar sua tendência
+# central, dispersão, assimetria e eventuais valores discrepantes (através de tabelas agrupadas em
+#                                                                  classes, histogramas e medidas de síntese). NÃO CATEGORIZEM as variáveis quantitativas.
+# 3) Analisem a variável Curso. Qual é o predominante? JUSTIFIQUEM!
+# Resposta:
+# O curso de Química tem 2297 dos registros analisados, seguido por Produção (2068), Mecânica (1874)
+# Elétrica (1474), Computação (1294) e Civil (973).
+# Obs.: O total de registros válidos ficou em 9980 já que 20 dos registros estão branco para esta variável
+# Dados gerados:
+#       curso.df   
+# Civil     : 973  
+# Computação:1294  
+# Elétrica  :1474  
+# Mecânica  :1874  
+# Produção  :2068  
+# Química   :2297  
+# NA's      :  20
+
+#CODE: Using summary function
+summary(data.frame(curso.df))
+
+# ###############################################################################################################
+# 4) Analisem a variável Turno. Qual é o predominante? JUSTIFIQUEM!
+# Resposta:
+# O turno Noturno predomina com 4099 dos registros, seguindo de Integral (3238 registros) e Diurno (2637 registros).
+# Obs.: Um total de 26 registros estão em branco
+#     turno.df   
+# Diurno  :2637  
+# Integral:3238  
+# Noturno :4099  
+# NA's    :  26
+
+#CODE: Using summary function
+summary(data.frame(turno.df))
+
+# ###############################################################################################################
+# 5) Analisem a variável Ensino médio. A direção da TYU acredita que a maioria absoluta dos seus
+# alunos cursou o ensino médio predominantemente em escolas particulares. Há evidência de que isso
+# realmente acontece? JUSTIFIQUEM!
+# Resposta:
+# Pelo contrário, os dados mostram que 5569 dos alunos estudaram exclusivamente em escolas públicas,
+# portanto mais da metade. Os alunos que estudaram a maior parte em escola pública somam 1281, se
+# somados estes grupos conclue-se que 68,7% dos alunos estudaram em escola pública na maior parte ou totalidade
+# do ensino médio. Dados listados abaixo:
+#                   ensinomedio.df
+# Maior parte em particular:1664  
+# Maior parte em pública   :1281  
+# Somente em particular    :1457  
+# Somente em pública       :5569  
+# NA's                     :  29 
+
+#CODE: Using summary function
+summary(data.frame(ensinomedio.df))
+
+# ###############################################################################################################
+# 6) Analisem a variável Opinião. Os alunos da TYU estão satisfeitos com os seus cursos?
+#   JUSTIFIQUEM!
+# Resposta:
+# Sim, 59,2% dos alunos se disseram satisfeitos ou muito satisfeitos com seus cursos. Outros 15,0% se
+# disseram indiferentes. Os alunos que se disseram muito insatisfeitos ou insatisfeitos representam o
+# restante da amostra, 25,8%. Os registros em branco não foram contabilizados.
+# opiniao.df  
+# Indiferente       :1499  
+# Insatisfeito      :1677  
+# Muito insatisfeito: 897  
+# Muito satisfeito  :3718  
+# Satisfeito        :2184  
+# NA's              :  25 
+
+#CODE: Using summary function
+summary(data.frame(ensinomedio.df))
+
+# ###############################################################################################################
+# 7) Façam uma descrição da variável Renda. Em estudos anteriores pelo menos três quartos dos
+# alunos de engenharia da TYU tinham renda familiar inferior a R$ 2700. Os dados atuais confirmam
+# isso? Lembrem-se de que o salário mínimo do Brasil em 2018 (referência para Pindorama) vale R$
+#   1965. JUSTIFIQUEM! (usando as tabelas de frequências, gráficos, e medidas usadas na descrição).
+# Resposta:
+# A variável renda é contada nesta base em salários mínimos (s.m.), aqui equivalente a R$ 965. Nesta nova análise propomos
+# observar múltiplos de salários mínimos para aperfeiçoar as análises devido perdas inflácionárias. A menor renda familiar
+# registrada foi de 1 salário mínimo e a máxima de 24,5 s.m. tendo como mediana 1,36 s.m.
+# Realizando um agrupamento a cada 2 salários, oberva-se que 7508 alunos (75,3%) dos alunos se encontrram na faixa
+# mais baixa, entre 0 e 2 salários mínimos. Outros 19,8% alunos estão na faixa seguinte, entre 2 e 4 salários mínimos.
+# Há ainda 3,8% das amostras que estão entre 4 e 6 salários mínimos de renda familiar, os grupos com entre 0 e 6 s.m.
+# somam 98,9% dos alunos registrados. 
+# Em referência a análise realizada anteriormente que leva em consideração alunos com renda de até R$ 2700, nesta nova
+# pesquisa, este grupo representa 88,1% dos alunos, realidade superior aos 3/4 de referência, confirmando
+# esta realidade.
+# Obs.: Para análise comparativa entre a nova pesquisa e a pesquisa anterior não foram realizados ajustes monetários
+# por perdas inflacionárias no período.
+# > summary(cut(tyu$Renda, breaks = 2*(0:13)))
+# (0,2]   (2,4]   (4,6]   (6,8]  (8,10] (10,12] (12,14] (14,16] (16,18] (18,20] (20,22] (22,24] (24,26]    NA's 
+#    7508    1976     377      63      29      10       4       5       0       0       0       1       1      26 
+# > summary(cut(tyu$Renda, breaks = 2*(0:13)))/sum(tyu$Renda > 0, na.rm = TRUE)
+# (0,2]        (2,4]        (4,6]        (6,8]       (8,10]      (10,12]      (12,14]      (14,16]      (16,18] 
+# 0.7527571686 0.1981150993 0.0377982755 0.0063164227 0.0029075597 0.0010026068 0.0004010427 0.0005013034 0.0000000000 
+# (18,20]      (20,22]      (22,24]      (24,26]         NA's 
+# 0.0000000000 0.0000000000 0.0001002607 0.0001002607 0.0026067776 
+# > summary(tyu$Renda)
+# Min. 1st Qu.  Median    Mean 3rd Qu.    Max.    NA's 
+#   1.000   1.100   1.360   1.781   2.000  24.560      26 
+# > sum(tyu$Renda < 2700/965, na.rm = TRUE)/sum(tyu$Renda > 0, na.rm = TRUE)
+# [1] 0.8807901
+
+#CODE: 
+sum(tyu$Renda < 2700/965, na.rm = TRUE)/sum(tyu$Renda > 0, na.rm = TRUE)
+summary(cut(tyu$Renda, breaks = 2*(0:13)))
+summary(tyu$Renda)
+
+png("hist_tyu_renda.png")
+hist(tyu$Renda, breaks = 2*(0:13))
+dev.off()
+# ###############################################################################################################
+# 8) Façam uma descrição da variável Nota no ENEM. Admite-se que pelo menos 75% dos alunos
+# dos cursos da TYU obtiveram nota maior ou igual a 420 no ENEM de Pindorama. Os dados atuais
+# confirmam isso? JUSTIFIQUEM! (usando as tabelas de frequências, gráficos, e medidas usadas na
+#                               descrição).
+# Resposta:
+# As notas do enem registradas variaram de 18 a 1069 tendo como mediana 502 pontos. Fazendo uma distribuição
+# a cada 200 pontos no ENEM, observa-se que a maioria se encontra na faixa entre 400 e 600 pontos (49,6%),
+# seguindo de alunos que fizeram entre 600 e 800 pontos (23,2%) e dos que fizeram entre 200 e 400 pontos (22,2%)
+# Os dados mostram ainda que os alunos da atual pesquisa tiveram no geral desempenho inferior aos registros
+# anteriores. Na atualidade apenas 71,5% dos alunos obtiveram nota igual ou superior a 420 pontos no ENEM, 
+# o percentual anteriormente registrado foi de 75% dos alunos que fizeram ao menos 420 pontos.
+# Obs: As notas aqui registrada mostra notas superiores a 1000, o que não é previsto no teste do ENEM. Há também
+# comportamento não usual com notas muito baixas (inferiores a 300) e muito altas (superiores a 950).
+# > sum(tyu$`Nota ENEM` >= 420, na.rm = TRUE)/sum(tyu$`Nota ENEM` > 0, na.rm = TRUE)
+# [1] 0.7147
+# > summary(tyu$`Nota ENEM`)
+#    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#    18.0   404.0   502.0   505.2   605.0  1069.0 
+# > summary(cut(tyu$`Nota ENEM`, breaks = 200*(0:6)))
+# (0,200]       (200,400]       (400,600]       (600,800]     (800,1e+03] (1e+03,1.2e+03] 
+# 201            2221            4957            2322             293               6
+# > summary(cut(tyu$`Nota ENEM`, breaks = 200*(0:6)))/sum(tyu$`Nota ENEM` > 0)
+# (0,200]       (200,400]       (400,600]       (600,800]     (800,1e+03] (1e+03,1.2e+03] 
+# 0.0201          0.2221          0.4957          0.2322          0.0293          0.0006
+#CODE:
+sum(tyu$`Nota ENEM` >= 420, na.rm = TRUE)/sum(tyu$`Nota ENEM` > 0, na.rm = TRUE)
+summary(tyu$`Nota ENEM`)
+summary(cut(tyu$`Nota ENEM`, breaks = 200*(0:6)))
+summary(cut(tyu$`Nota ENEM`, breaks = 200*(0:6)))/sum(tyu$`Nota ENEM` > 0)
+
+png("hist_tyu_enem.png")
+hist(tyu$`Nota ENEM`, breaks = 200*(0:6))
+dev.off()
+# ###############################################################################################################
+# 9) Façam uma descrição da variável IAA. Há uma crença que o IAA da maioria dos alunos é
+# superior a 5. Os dados atuais confirmam isso? JUSTIFIQUEM! (usando as tabelas de frequências,
+#                                                             gráficos, e medidas usadas na descrição).
+# Resposta:
+# O IAA dos alunos ficou entre 1,611 e 8,771 pontos, com mediana em 4,656. A maioria dos alunos apresentou notas
+# inferiores a 5, apenas 37,1% fizeram 5 ou mais pontos 
+# Obs.: Aqui se considerou notas superiores a 5 incluindo o próprio 5,0.
+
+# > summary(tyu$IAA)
+#    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+#   1.161   3.999   4.656   4.680   5.353   8.771 
+# > sum(tyu$IAA > 5, na.rm = TRUE)/sum(tyu$IAA > 0, na.rm = TRUE)
+# [1] 0.37
+
+#CODE:
+summary(tyu$IAA)
+sum(tyu$IAA >= 5, na.rm = TRUE)/sum(tyu$IAA > 0, na.rm = TRUE)
+
+png("hist_tyu_IAA.png")
+hist(tyu$IAA, breaks = 0:10)
+dev.off()
+
+# ###############################################################################################################
+# Terceira Parte - Análise em conjunto de duas variáveis
+# Observem os níveis de mensuração das variáveis. Se ambas forem qualitativas lembrem-se de
+# registrar frequências absolutas e percentuais. Se uma for quantitativa, NÃO CATEGORIZEM a
+# variável, usem medidas de síntese em função dos valores da qualitativa.JUSTIFIQUEM as
+# variáveis escolhidas para a análise, JUSTIFIQUEM as respostas (usando tabelas de frequências,
+#                                                                gráficos ou quaisquer medidas de síntese necessárias). Comparem os resultados com aqueles
+# obtidos individualmente para as duas variáveis na segunda parte.
+# 
+# 10) Na última pesquisa realizada há três anos a TYU descobriu que os alunos de Engenharia Civil e
+# Engenharia de Computação estavam muito insatisfeitos com os seus cursos, já os de Engenharia
+# Elétrica e de Produção estavam satisfeitos, os de Engenharia Mecânica e Química estavam
+# predominantemente indiferentes. Estes perfis são confirmados pelos dados atuais?
+#
+# Resposta:
+# Nesta nova pesquisa os alunos da engenharia civil e computação, os índices de insatisfação foram
+# respectivamente 4,85% e 2,55% dos alunos. No caso dos cursos de elétrica e produção, se observam 
+# opiniões bastante divergentes, dos alunos de elétrica 98,1% estão satisfetos ou muito satisfeitos contra 
+# apenas 38,0% dos alunos de produção.
+# Quanto aos cursos de engenharia mecânica e engenharia química, novamente se observam opiniões bastante 
+# divergentes. Em química a maioria se diz satisfeito ou muito satisfeito, somando 63,9% dos alunos deste curso,
+# havendo 19,6% de indiferentes. O curso de mecânica foi o que apresentou indíces mais baixos de satisfação, 
+# os satisfeitos ou muito satisfeitos somam apenas 12,0%, os indiferentes 15,4% e a maioria, 72,6%, se diz
+# insatisfeito ou muito insatisfeito.
+
+#CODE
+out <- format(round(prop.table(table(tyu.df$Curso, tyu.df$Opinião),1)*100,2), digits = 2)
+write.table(out, "prop_tyu_Curso_Opiniao.txt", sep=", ")
+
+# ###############################################################################################################
+# 11) Na pesquisa do item 10 não foi identificada associação entre o turno e o curso escolhido pelo
+# aluno da TYU. Os dados atuais confirmam este padrão?
+#
+# Resposta:
+# Não, este padrão não se confirma. No curso de Civil há predominância de alunos no turno Noturno (59,2%),
+# assim como computação (71,3%) e Elétrica (90,7%). Porém, o turno integral é ptrdominante no curso de
+# mecânica (79,2%) e de Produção (48,1%). Este último mais equilibrado tem ainda 35,8% de seus alunos no turno 
+# Diurno. Finalmente, a distribuição mais igualitária ocorre no curso de Química com 37,1% de alunos no turno
+# noturno, outro 37,1% no turno Diurno e 25,8% no turno Noturno.
+
+# > format(round(prop.table(table(tyu.df$Curso, tyu.df$Turno),1)*100,2), digits = 2)
+# 
+#             Diurno Integral Noturno
+# Civil      "30.7" "10.1"   "59.2" 
+# Computação "24.1" " 4.7"   "71.3" 
+# Elétrica   " 8.2" " 1.1"   "90.7" 
+# Mecânica   "16.9" "79.2"   " 4.0" 
+# Produção   "35.8" "48.1"   "16.1" 
+# Química    "37.1" "25.8"   "37.1"
+
+# ###############################################################################################################
+# 12) Na pesquisa do item 10 os alunos do turno noturno queixaram-se muito dos seus cursos, os
+# professores alocados para o turno e a própria infraestrutura seriam piores do que as dos outros dois
+# turnos. Já os alunos dos demais turnos apresentavam grande satisfação. A direção da TYU realizou
+# várias mudanças, incluindo contratação de novos professores e melhorias na infraestrutura para o
+# turno noturno. De acordo com os dados atuais o investimento deu resultado? E os outros turnos,
+# mantiveram as opiniões positivas?
+
+# Sim, o investimento deu resultado, no sentido de melhora da satisfação dos alunos do turno noturno, porém o índice 
+# de insatisfação do turno integral passou a ser muito alto. Nesta nova pesquisa a satisfação do turno noturno
+# passou a 98% e do curso diurno a 52% com 29% de indiferentes. Por outro lado, o turno integral apresenta apenas 8%
+# de satisfação com 20% de indiferentes, somando 72% de insatisfeitos.
+
+# out <- format(round(prop.table(table(tyu.df$Turno, tyu.df$Opinião),1),2),digits = 2)
+# > out
+# 
+#       Indiferente Insatisfeito Muito insatisfeito Muito satisfeito Satisfeito
+# Diurno   "0.29"      "0.09"       "0.00"             "0.14"           "0.48"    
+# Integral "0.20"      "0.44"       "0.28"             "0.01"           "0.07"    
+# Noturno  "0.02"      "0.00"       "0.00"             "0.81"           "0.17" 
+
+out <- format(round(prop.table(table(tyu.df$Turno, tyu.df$Opinião),1),2),digits = 2)
+write.table(out, "prop_tyu_Turno_Opiniao.txt", sep=", ")
+
+# ###############################################################################################################
+# 13) Há um rumor entre os professores da TYU que os cursos de Engenharia Elétrica e Química, por
+# serem “mais difíceis” teriam um maior percentual de alunos que cursaram o ensino médio total ou
+# predominantemente em escola particular, que supõe-se ter preparado melhor os alunos. E os cursos
+# de Engenharia Civil e de Produção, por serem “mais fáceis” teriam um maior percentual de alunos
+# que cursaram o ensino médio total ou predominantemente em escola pública, que se supõe não
+# preparou os alunos tão bem quanto as particulares. E ainda, que nos demais cursos haveria uma
+# distribuição equilibrada entre alunos que cursaram ensino médio em escolas públicas e particulares.
+# Os dados atuais confirmam a suspeita?
+
+# Resposta:
+# A distribuição dos alunos que cursaram parcial ou integralmente escolas públicas ou particulares
+# é no geral bastante igualitária entre os cursos, ficando entre 69% e 74% de predominância de alunos
+# que vieram majoritaria ou integralmente de instituições públicas. A exceção é para o curso de elétrica
+# onde 50% dos alunos estudaram principalmente em escolas públicas e outros 50% em escolas particulares.
+# Portanto pode-se dizer que a crença se sustenta ao menos em relação ao curso de elétrica. AOs demais
+# cursos não se percebe tendência significativa.
+
+# > out <- format(round(prop.table(table(tyu.df$Curso, tyu.df$`Ensino médio`),1)*100,2), digits = 2)
+# > out
+# 
+# Maior parte em particular Maior parte em pública Somente em particular Somente em pública
+# Civil      " 8.95"                   " 3.40"                "18.42"               "69.24"           
+# Computação " 6.89"                   " 1.16"                "23.53"               "68.42"           
+# Elétrica   " 1.84"                   " 0.41"                "48.13"               "49.63"           
+# Mecânica   "28.02"                   "39.57"                " 0.43"               "31.98"           
+# Produção   "25.93"                   "15.83"                " 2.67"               "55.56"           
+# Química    "17.43"                   " 7.03"                " 8.74"               "66.80"           
+# > 3.4+69.24
+# [1] 72.64
+# > 1.16+68.42
+# [1] 69.58
+# > .41+49.63
+# [1] 50.04
+# > 39.57+31.98
+# [1] 71.55
+# > 15.83+55.56
+# [1] 71.39
+# > 7.03+66.8
+# [1] 73.83
+
+out <- format(round(prop.table(table(tyu.df$Curso, tyu.df$`Ensino médio`),1)*100,2), digits = 2)
+write.table(out, "prop_tyu_Curso_EnsinoMedio.txt", sep=", ")
+
+# ###############################################################################################################
+# 14) Na pesquisa do item 10 constatou-se que os alunos mais abastados eram indiferentes, os mais
+# pobres estavam mais satisfeitos e os com renda intermediária insatisfeitos com seus cursos. Os
+# dados atuais confirmam esta constatação do passado?
+
+# Resposta
+# Não se confirmam. Observa-se que os alunos mais abastados passaram a apresentar mais alto indice de insatisfação
+# para o maior grupo (entre 6 e 12 s.m.) os insatisfeitos ou muito insatisfeitos somam 84,3% índice que se eleva ainda mais para os
+# alunos cuja renda familiar supera os 12 s.m. com 88,8% para entre 12 e 16 s.m. e 100% para acima de 20 s.m.
+# Os alunos mais pobres continuam sendo os mais satisfeitos com 75,2% de satisfação. Para os alunos de renda intermediaria o índice de satisfação fica em 11,2% e 7.2% para 
+# as faixas de 2 a 4 s.m. e 4 a 6 s.m. respectivamente (média simples de 9,2%). Os insatisfeitos somam 69% e 90,9% para as respectivas
+# faixas de salários mínimos.
+# Obs.: Para esta análise consideraremos mais pobres aqueles que tem renda familiar de 0 a 2 s.m., intermediário para entre
+# 2 e 6 s.m. e alta renda para 6 ou mais s.m.
+
+# > out <- format(round(prop.table(table(tyu.df$Opinião, cut(tyu$Renda, breaks = 2*(0:13))),2)*100,2), digits = 2)
+# > out
+# 
+#                       (0,2]   (2,4]   (4,6]   (6,8]   (8,10]  (10,12] (12,14] (14,16] (16,18] (18,20] (20,22] (22,24] (24,26]
+# Indiferente        " 14.5" " 19.8" "  1.9" "  6.3" "  3.5" "  0.0" "  0.0" " 20.0" "  NaN" "  NaN" "  NaN" "  0.0" "  0.0"
+# Insatisfeito       "  9.2" " 45.3" " 18.9" " 14.3" " 10.3" "  0.0" " 25.0" " 60.0" "  NaN" "  NaN" "  NaN" "  0.0" "  0.0"
+# Muito insatisfeito "  1.0" " 23.7" " 72.0" " 73.0" " 79.3" " 50.0" " 75.0" " 20.0" "  NaN" "  NaN" "  NaN" "100.0" "100.0"
+# Muito satisfeito   " 48.7" "  1.9" "  4.5" "  1.6" "  0.0" " 40.0" "  0.0" "  0.0" "  NaN" "  NaN" "  NaN" "  0.0" "  0.0"
+# Satisfeito         " 26.5" "  9.3" "  2.7" "  4.8" "  6.9" " 10.0" "  0.0" "  0.0" "  NaN" "  NaN" "  NaN" "  0.0" "  0.0"
+
+# > out <- format(round(prop.table(table(tyu.df$Opinião, cut(tyu$Renda, breaks = 6*(0:4))),2)*100,2), digits = 2)
+# > out
+# 
+                      # (0,6]   (6,12]  (12,18] (18,24]
+# Indiferente        " 15.1" "  4.9" " 11.1" "  0.0"
+# Insatisfeito       " 16.8" " 11.8" " 44.4" "  0.0"
+# Muito insatisfeito "  8.3" " 72.5" " 44.4" "100.0"
+# Muito satisfeito   " 37.7" "  4.9" "  0.0" "  0.0"
+# Satisfeito         " 22.1" "  5.9" "  0.0" "  0.0"
+
+out <- format(round(prop.table(table(tyu.df$Opinião, cut(tyu$Renda, breaks = 2*(0:13))),2)*100,2), digits = 2)
+write.table(out, "prop_tyu_Opiniao_Renda_1.txt", sep=", ")
+out <- format(round(prop.table(table(tyu.df$Opinião, cut(tyu$Renda, breaks = 6*(0:4))),2)*100,2), digits = 2)
+write.table(out, "prop_tyu_Opiniao_Renda_2.txt", sep=", ")
+
+# ###############################################################################################################
+# 15) Também na pesquisa do item 10 constatou-se que os alunos dos cursos de Engenharia Química
+# e Elétrica apresentavam os maiores IAAs, e que os de Engenharia Civil apresentavam os menores,
+# com os outros cursos tendo um desempenho intermediário. Os dados atuais confirmam esta
+# constatação do passado?
+
+# Resposta:
+# Não confirmam. Atualmente os alunos de Mecânica apresentam os maiores IAAs com 67,6% com nota 5 ou mais. Os alunos de Química
+# comparativamente têm 35,7% dos alunos nesta situação e elétrica apenas 8,4%. O curso que vem na sequencia de mecânica com
+# maiores médias de IAA é de engenharia de produção com 48,8% dos alunos com nota igual ou superior a 5. O curso de engenharia civil 
+# tem 24,2% alunos com IAA igual ou superior a 5. Por fim, o curso de computação tem 18,0% dos alunos nesta faixa.
+
+#             (0,1]   (1,2]   (2,3]   (3,4]   (4,5]   (5,6]   (6,7]   (7,8]   (8,9]   (9,10] 
+# Civil      " 0.00" " 0.51" " 4.62" "25.18" "45.53" "21.99" " 1.75" " 0.41" " 0.00" " 0.00"
+# Computação " 0.00" " 0.46" " 6.65" "33.77" "41.11" "16.00" " 1.85" " 0.15" " 0.00" " 0.00"
+# Elétrica   " 0.00" " 2.51" "16.28" "37.79" "35.07" " 7.26" " 0.95" " 0.14" " 0.00" " 0.00"
+# Mecânica   " 0.00" " 0.00" " 0.53" " 4.70" "26.89" "41.68" "21.88" " 4.00" " 0.32" " 0.00"
+# Produção   " 0.00" " 0.00" " 0.73" "12.14" "38.35" "36.46" "11.17" " 1.16" " 0.00" " 0.00"
+# Química    " 0.00" " 0.00" " 2.22" "18.63" "43.36" "29.08" " 6.09" " 0.57" " 0.04" " 0.00"
+# 
+# > out <- format(round(prop.table(table(tyu.df$Curso, cut(tyu$IAA, breaks = 2*(0:5))),1)*100,2), digits = 2)
+# > out
+# 
+#             (0,2]   (2,4]   (4,6]   (6,8]   (8,10] 
+# Civil      " 0.51" "29.80" "67.52" " 2.16" " 0.00"
+# Computação " 0.46" "40.42" "57.11" " 2.01" " 0.00"
+# Elétrica   " 2.51" "54.07" "42.33" " 1.09" " 0.00"
+# Mecânica   " 0.00" " 5.23" "68.57" "25.88" " 0.32"
+# Produção   " 0.00" "12.86" "74.81" "12.33" " 0.00"
+# Química    " 0.00" "20.85" "72.44" " 6.66" " 0.04"
+
+out <- format(round(prop.table(table(tyu.df$Curso, cut(tyu$IAA, breaks = (0:10))),1)*100,2), digits = 2)
+write.table(out, "prop_tyu_Curso_IAA.txt", sep=", ")
+
+# ###############################################################################################################
+# 16) Também na pesquisa do item 10 constatou-se a existência de correlação linear entre a Nota no
+# ENEM e seus IAAs: alunos com maiores notas no ENEM costumavam ter maior IAA, e parecia
+# apropriado ajustar uma reta ao diagrama de dispersão. Os dados atuais confirmam esta constatação
+# do passado?
+
+# Resposta:
+# Sim, há correspondência entres estas variáveis. Através do gráfico de dispersão percebe-se que quanto maior a nota do ENEM maior
+# tende a ser o IAA e vice-versa. 
+
+png("scatter_tyu_IAA_ENEM.png")
+plot(tyu$`Nota ENEM`, tyu$IAA, main="Scatterplot", xlab="X ", ylab="Y ", pch=19)
+dev.off()
+
+# > out <- format(round(prop.table(table(cut(tyu$`Nota ENEM`, breaks = 100*(0:11)), cut(tyu$IAA, breaks = (0:10))),1)*100,2), digits = 2)
+# > out
+# 
+#                   (0,1]   (1,2]   (2,3]   (3,4]   (4,5]   (5,6]   (6,7]   (7,8]   (8,9]   (9,10] 
+# (0,100]         " 0.00" "73.91" "26.09" " 0.00" " 0.00" " 0.00" " 0.00" " 0.00" " 0.00" " 0.00"
+# (100,200]       " 0.00" " 9.68" "85.81" " 4.52" " 0.00" " 0.00" " 0.00" " 0.00" " 0.00" " 0.00"
+# (200,300]       " 0.00" " 0.00" "42.58" "57.27" " 0.15" " 0.00" " 0.00" " 0.00" " 0.00" " 0.00"
+# (300,400]       " 0.00" " 0.00" " 1.35" "79.76" "18.90" " 0.00" " 0.00" " 0.00" " 0.00" " 0.00"
+# (400,500]       " 0.00" " 0.00" " 0.00" "15.04" "83.74" " 1.22" " 0.00" " 0.00" " 0.00" " 0.00"
+# (500,600]       " 0.00" " 0.00" " 0.00" " 0.04" "55.14" "44.82" " 0.00" " 0.00" " 0.00" " 0.00"
+# (600,700]       " 0.00" " 0.00" " 0.00" " 0.00" " 2.33" "88.90" " 8.77" " 0.00" " 0.00" " 0.00"
+# (700,800]       " 0.00" " 0.00" " 0.00" " 0.00" " 0.00" "24.60" "74.67" " 0.72" " 0.00" " 0.00"
+# (800,900]       " 0.00" " 0.00" " 0.00" " 0.00" " 0.00" " 0.00" "69.02" "30.98" " 0.00" " 0.00"
+# (900,1e+03]     " 0.00" " 0.00" " 0.00" " 0.00" " 0.00" " 0.00" " 2.63" "89.47" " 7.89" " 0.00"
+# (1e+03,1.1e+03] " 0.00" " 0.00" " 0.00" " 0.00" " 0.00" " 0.00" " 0.00" "33.33" "66.67" " 0.00"
+
+out <- format(round(prop.table(table(cut(tyu$`Nota ENEM`, breaks = 100*(0:11)), cut(tyu$IAA, breaks = (0:10))),1)*100,2), digits = 2)
+write.table(out, "prop_tyu_ENEM_IAA.txt", sep=", ")
+
+# ###############################################################################################################
+# Quarta Parte - Análise em conjunto de MAIS de duas variáveis
+# Observem os níveis de mensuração das variáveis. Se todas forem qualitativas lembrem-se de
+# registrar frequências absolutas e percentuais. Se uma for quantitativa, NÃO CATEGORIZE a
+# variável, use medidas de síntese em função dos valores das qualitativas. JUSTIFIQUEM as
+# variáveis escolhidas para a análise, JUSTIFIQUEM as respostas (usando tabelas de frequências,
+#                                                                gráficos ou quaisquer medidas de síntese necessárias).
+# 17) As conclusões da questão 10 valem para os três turnos?
+
+# Resposta:
+# No geral sim, há grande correlação entre satisfação e turno, assim como há forte correlação com o curso. O turno integral 
+# apresentou os índices de satisfação mais baixos, em média 8% (absoluto, conforme dados anteriormente apresentados), o curso mais 
+# bem pontuado foi Computação com 30% de satisfação e o menos pontuado mecânica com apenas 2% de satisfação. No turno 
+# diurno a satisfação média foi de 62%, desta vez elétrica é o mais bem pontuado com 91% de satisfação e mecânica vem a ser
+# novamente o curso com pior índice (41%). Finalmente, no turno Noturno a satisfação média é de 98%, no curso de elétrica 
+# apresentação satisfação de 100% e o outro extremo, mecânica, com 87% de satisfação.
+
+# AQUI SERIA BACANA MEDIR A VARIANCIA QUANDO SE RELACIONA OPINIAO E TURNO E OPINIAO E CURSO PARA VER QUAL A RELAÇÃO QUE É MAIS
+# "LINEAR" (CORRELAÇÃO MAIS FORTE)
+
+# Obs.: Nesta análise o índice de satisfação se refere a soma das respostas nas opções muito satisfeito e satisfeito, assim como o índice
+# de insatisfação soma os muito insatisfeitos e insatisfeitos. Em ambos os casos os indiferentes não são incluídos no cálculo.
+# > out <- format(round(prop.table(table(subset(tyu.df[c(1:4)], Turno == "Integral", select = c(Curso, Opinião))),1),2),digits = 2)
+# > out
+# Opinião
+# Curso        Indiferente Insatisfeito Muito insatisfeito Muito satisfeito Satisfeito
+# Civil      "0.37"      "0.39"       "0.03"             "0.02"           "0.19"    
+# Computação "0.32"      "0.32"       "0.07"             "0.03"           "0.27"    
+# Elétrica   "0.44"      "0.44"       "0.00"             "0.00"           "0.12"    
+# Mecânica   "0.11"      "0.42"       "0.45"             "0.00"           "0.02"    
+# Produção   "0.25"      "0.48"       "0.18"             "0.01"           "0.09"    
+# Química    "0.32"      "0.47"       "0.06"             "0.01"           "0.14"
+# > out <- format(round(prop.table(table(subset(tyu.df[c(1:4)], Turno == "Diurno", select = c(Curso, Opinião))),1),2),digits = 2)
+# > out
+# Opinião
+# Curso        Indiferente Insatisfeito Muito insatisfeito Muito satisfeito Satisfeito
+# Civil      "0.24"      "0.02"       "0.00"             "0.17"           "0.56"    
+# Computação "0.21"      "0.03"       "0.00"             "0.22"           "0.54"    
+# Elétrica   "0.07"      "0.02"       "0.00"             "0.32"           "0.59"    
+# Mecânica   "0.36"      "0.22"       "0.01"             "0.05"           "0.36"    
+# Produção   "0.35"      "0.13"       "0.01"             "0.09"           "0.43"    
+# Química    "0.28"      "0.08"       "0.00"             "0.15"           "0.50" 
+# > out <- format(round(prop.table(table(subset(tyu.df[c(1:4)], Turno == "Noturno", select = c(Curso, Opinião))),1),2),digits = 2)
+# > out
+# Opinião
+# Curso        Indiferente Insatisfeito Muito satisfeito Satisfeito
+# Civil      "0.02"      "0.00"       "0.83"           "0.16"    
+# Computação "0.01"      "0.00"       "0.85"           "0.15"    
+# Elétrica   "0.00"      "0.00"       "0.95"           "0.05"    
+# Mecânica   "0.14"      "0.00"       "0.41"           "0.46"    
+# Produção   "0.07"      "0.00"       "0.58"           "0.35"    
+# Química    "0.03"      "0.00"       "0.68"           "0.29" 
+
+out <- format(round(prop.table(table(subset(tyu.df[c(1:5)], Turno == "Integral", select = c(Curso, Opinião))),1),2),digits = 2)
+write.table(out, "prop_tyu_Curso_Opiniao_Integral.txt", sep=", ")
+out <- format(round(prop.table(table(subset(tyu.df[c(1:5)], Turno == "Diurno", select = c(Curso, Opinião))),1),2),digits = 2)
+write.table(out, "prop_tyu_Curso_Opiniao_Diurno.txt", sep=", ")
+out <- format(round(prop.table(table(subset(tyu.df[c(1:5)], Turno == "Noturno", select = c(Curso, Opinião))),1),2),digits = 2)
+write.table(out, "prop_tyu_Curso_Opiniao_Noturno.txt", sep=", ")
+
+# ###############################################################################################################
+# 18) As conclusões da questão 14 valem para alunos de todos os cursos?
+
+# No geral sim. Precisa-se observar o fato de que os alunos mais abastados, no geral, estudam mecânica e foi também
+# neste curso que se obteve os piores índices quando a satisfação. Desta forma, estes alunos mais abastados foram decisivos
+# para puxar o índice de satisfação do curso e destas faixas salariais para baixo. O curso de produção, que em menor proporção
+# também possui alunos mais abastados, seguiu a mesma tendência.
+# Ver gráficos de "Renda vs Freq" por opinião
+
+# Computação  :::NULL
+# Renda
+# Opinião             (0,2] (2,4] (4,6] (6,8] (8,10] (10,12] (12,14] (14,16] (16,18] (18,20] (20,22] (22,24] (24,26]
+# Indiferente        74.16 25.84  0.00  0.00  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Insatisfeito       37.93 55.17  3.45  3.45  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Muito insatisfeito 25.00 50.00 25.00  0.00  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Muito satisfeito   97.65  1.65  0.47  0.12  0.00   0.12    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Satisfeito         92.14  7.55  0.00  0.31  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Press <return to continue
+# Produção  :::NULL
+# Renda
+# Opinião             (0,2] (2,4] (4,6] (6,8] (8,10] (10,12] (12,14] (14,16] (16,18] (18,20] (20,22] (22,24] (24,26]
+# Indiferente        71.00 27.50  1.32  0.00  0.00   0.00    0.00    0.19    0.00    0.00    0.00    0.00    0.00  
+# Insatisfeito       42.81 53.29  3.37  0.36  0.00   0.00    0.18    0.00    0.00    0.00    0.00    0.00    0.00  
+# Muito insatisfeito 10.50 57.46 29.28  1.66  0.55   0.55    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Muito satisfeito   98.09  1.53  0.38  0.00  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Satisfeito         89.21  9.83  0.77  0.00  0.00   0.19    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Press <return to continue
+# Elétrica  :::NULL
+# Renda
+# Opinião             (0,2] (2,4] (4,6] (6,8] (8,10] (10,12] (12,14] (14,16] (16,18] (18,20] (20,22] (22,24] (24,26]
+# Indiferente        72.22 27.78  0.00  0.00  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Insatisfeito       40.00 40.00 20.00  0.00  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Muito insatisfeito   NaN   NaN   NaN   NaN   NaN    NaN     NaN     NaN     NaN     NaN     NaN     NaN     NaN  
+# Muito satisfeito   98.92  0.54  0.39  0.00  0.00   0.15    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Satisfeito         93.66  6.34  0.00  0.00  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Press <return to continue
+# Civil  :::NULL
+# Renda
+# Opinião             (0,2] (2,4] (4,6] (6,8] (8,10] (10,12] (12,14] (14,16] (16,18] (18,20] (20,22] (22,24] (24,26]
+# Indiferente        74.36 24.79  0.00  0.00  0.85   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Insatisfeito       40.91 47.73  6.82  0.00  2.27   0.00    0.00    2.27    0.00    0.00    0.00    0.00    0.00  
+# Muito insatisfeito  0.00 66.67 33.33  0.00  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Muito satisfeito   98.48  0.76  0.57  0.00  0.00   0.19    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Satisfeito         90.22  8.70  1.09  0.00  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Press <return to continue
+# Química  :::NULL
+# Renda
+# Opinião             (0,2] (2,4] (4,6] (6,8] (8,10] (10,12] (12,14] (14,16] (16,18] (18,20] (20,22] (22,24] (24,26]
+# Indiferente        72.42 26.91  0.00  0.67  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Insatisfeito       47.35 47.94  4.41  0.29  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Muito insatisfeito 13.51 59.46 21.62  5.41  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Muito satisfeito   98.32  1.12  0.56  0.00  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Satisfeito         90.63  8.57  0.27  0.27  0.27   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Press <return to continue
+# Mecânica  :::NULL
+# Renda
+# Opinião             (0,2] (2,4] (4,6] (6,8] (8,10] (10,12] (12,14] (14,16] (16,18] (18,20] (20,22] (22,24] (24,26]
+# Indiferente        76.39 23.26  0.00  0.35  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Insatisfeito       37.24 56.89  4.55  0.73  0.29   0.00    0.00    0.29    0.00    0.00    0.00    0.00    0.00  
+# Muito insatisfeito  7.91 50.30 30.90  6.12  3.28   0.60    0.45    0.15    0.00    0.00    0.00    0.15    0.15  
+# Muito satisfeito   97.92  2.08  0.00  0.00  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Satisfeito         93.75  6.25  0.00  0.00  0.00   0.00    0.00    0.00    0.00    0.00    0.00    0.00    0.00  
+# Press <return to continue
+
+temp.df = data.frame(tyu.df$Opinião, cut(tyu$Renda, breaks = 2*(0:13)), tyu.df$Curso)
+colnames(temp.df) <- c("Opinião","Renda","Curso")
+
+# For each course, print opinions by familiar income
+library(lattice)
+for(i in 1:nrow(curso.var)) {
+  row <- curso.var[i,]
+  tb <- table(
+    subset(
+      temp.df[c(1:3)], Curso == row, select = c(Opinião, Renda)
+    )
+  )
+  df <- data.frame(tb)
+  out <- format(round(prop.table(
+    tb
+    ,1)*100,2), digits = 2)
+  print(cat(row," :::"), sep = " ", fill = FALSE, labels = NULL, append = FALSE)
+  print.table(out)
+  
+  filename <- paste("xy_tyu_Renda_Freq_",row,".png", sep="")
+  png(as.character(filename))
+  print(xyplot(df$Renda ~ df$Freq | df$Opinião, iris, pch= 20))
+  dev.off()
+  
+  readline("Press <return to continue") 
+}
+
+# ###############################################################################################################
+# Quinta Parte – Recomendações para o cliente
+# 19) Caso houvesse dados com os perfis abaixo, qual seria a opinião dos alunos da TYU sobre seus
+# cursos de acordo com os dados. JUSTIFIQUEM!
+#   a) Curso: Engenharia Civil; Renda: mais que 2 salários mínimos; Turno: Diurno.
+
+# Resposta:
+# 53% dos alunos de Civil, Diurno com renda igual ou superior a 2 s.m. estão satisfeitos com o curso e 39% está indiferente.
+
+tb <- table(
+  subset(
+    tyu.df[c(1:7)], Turno == "Diurno" & Renda >= 2 & Curso == "Civil", select = c(Opinião,NROW(Opinião))
+  )
+)
+nr <- NROW(subset(
+  tyu.df[c(1:7)], Turno == "Diurno" & Renda >= 2 & Curso == "Civil", select = c(Opinião)
+))
+print("Civil:Diurno:>=2sm:")
+print.table(100*tb/nr)
+
+# > print.table(100*tb/nr)
+# Curso
+# Opinião               Civil
+# Indiferente      39.024390
+# Insatisfeito      7.317073
+# Muito satisfeito  4.878049
+# Satisfeito       48.780488
+
+# b) Curso: Engenharia Mecânica; Renda: menos do que 4 salários mínimos; Turno: Noturno.
+
+# Resposta:
+# 86% dos alunos de Mecânica, Noturno com renda inferior a 4 s.m. estão satisfeitos com o curso.
+
+tb <- table(
+  subset(
+    tyu.df[c(1:7)], Turno == "Noturno" & Renda < 4 & Curso == "Mecânica", select = c(Opinião,NROW(Opinião))
+  )
+)
+nr <- NROW(subset(
+  tyu.df[c(1:7)], Turno == "Noturno" & Renda < 4 & Curso == "Mecânica", select = c(Opinião)
+))
+print("Mecânica:Noturno:<4sm:")
+print.table(100*tb/nr)
+
+# > print.table(100*tb/nr)
+# Curso
+# Opinião           Mecânica
+# Indiferente      13.51351
+# Muito satisfeito 40.54054
+# Satisfeito       45.94595
+
+# c) Curso: Engenharia Química; Renda: mais que 3 salários mínimos; Turno: Integral.
+
+# Resposta:
+# Apenas 4% dos alunos de Química, Integral com renda igual ou superior a 3 s.m. estão satisfeitos com o curso.
+# Os alunos insatisfeitos somam 86% e indiferentes 10%.
+
+tb <- table(
+  subset(
+    tyu.df[c(1:7)], Turno == "Integral" & Renda >= 3 & Curso == "Química", select = c(Opinião,NROW(Opinião))
+  )
+)
+nr <- NROW(subset(
+  tyu.df[c(1:7)], Turno == "Integral" & Renda >= 3 & Curso == "Química", select = c(Opinião)
+))
+print("Química:Integral:>=3sm:")
+print.table(100*tb/nr)
+
+# > print.table(100*tb/nr)
+# Curso
+# Opinião               Química
+# Indiferente         9.756098
+# Insatisfeito       57.317073
+# Muito insatisfeito 29.268293
+# Satisfeito          3.658537
+
+# ###############################################################################################################
+
+# 20) Que outras variáveis vocês creem necessárias para caracterizar adequadamente as opiniões dos
+# alunos dos cursos de engenharia da TYU (sugira pelo menos duas)? JUSTIFIQUEM!
+
+# Resposta:
+# Seria interessante realizar uma análise da retenção, verificando a ocorrência de reprovação em certas disciplinas dos
+# cursos o que pode ser muito desestimulante. Outra análise que pode trazer informações úteis é da fase atual do 
+# entrevistado, indicando se a opinião dos alunos varia na medida que esteja mais próximo de se formar.
+
+# ###############################################################################################################
+
+# 21) Há alguma outra análise que você gostaria de fazer com as variáveis existentes (sugira pelo
+# menos duas) para analisar melhor as opiniões dos alunos dos cursos de engenharia da TYU? Por
+# quê?
+
+# Será que os melhores alunos são os mais satisfeitos (IAA vs Opinião)?
+# Este dado poderia apresentar que alunos que tem levado o curso de forma mais bem sucedida estariam mais motivados e 
+# expressariam opiniões mais favoráveis quanto ao curso.
+
+# Será que os alunos mais abastados são os que tem maiores IAAs (IAA vs Renda)? 
+# Os alunos mais abastados provavelmente tem mais mais recursos (espaço mais adequado, dispositivos tecnológicos, 
+# alimentação, mobilidade, etc.) e condições de focar nos estudos sem ter que ajudar no orçamento familiar
+
+# ###############################################################################################################
+#   
+# Será que os melhores alunos são os mais satisfeitos (IAA vs Opinião)?
+# Resposta:
+# Os dados mostram que não há relação forte, há até uma tendência oposta nos extremos, os muito insatisfeitos
+# são muitas vezes os que tem melhores IAA e dos muito satisfeitos, surpreendentemente, constam os alunos com
+# os IAAs mais baixos.
+
+# > write.table(out, "prop_tyu_Opinião_IAA.txt", sep=", ")
+# > out
+# 
+#                     (0,1]   (1,2]   (2,3]   (3,4]   (4,5]   (5,6]   (6,7]   (7,8]   (8,9]   (9,10] 
+# Indiferente        " 0.00" " 0.00" " 0.33" "10.41" "40.96" "40.29" " 7.34" " 0.67" " 0.00" " 0.00"
+# Insatisfeito       " 0.00" " 0.00" " 0.06" " 3.16" "30.65" "45.20" "19.08" " 1.79" " 0.06" " 0.00"
+# Muito insatisfeito " 0.00" " 0.00" " 0.00" " 0.33" "12.37" "44.04" "34.67" " 7.92" " 0.67" " 0.00"
+# Muito satisfeito   " 0.00" " 1.32" "11.08" "37.92" "39.46" " 9.41" " 0.73" " 0.08" " 0.00" " 0.00"
+# Satisfeito         " 0.00" " 0.00" " 1.33" "17.67" "49.31" "28.34" " 3.07" " 0.27" " 0.00" " 0.00"
+
+out <- format(round(prop.table(table(tyu.df$Opinião, cut(tyu$IAA, breaks = (0:10))),1)*100,2), digits = 2)
+write.table(out, "prop_tyu_Opinião_IAA.txt", sep=", ")
+
+# Será que os alunos mais abastados são os que tem maiores IAAs (IAA vs Renda)? 
+# Resposta:
+# Os dados mostram que os piores IAAs estão associados aos alunos de renda mais baixa, os maiores IAA registrados seguem esta
+# lógica, estando associados a alunos com rendas mais altas (acima de 4 s.m.). Naturalmente não há uma curva de tendência que
+# indique maior renda e maior IAA, mas pode-se observar que em média os IAAs são substancialmente superiores para os alunos com renda
+# igual ou superior a 4 s.m., verifica-se que dos alunos com menos de 4 s.m. de renda a maioria, 66%, apresenta IAA abaixo de 5. Por outro
+# lado, 86% dos alunos de renda entre 4 e 8 s.m. tem IAA superior a 5, média equivalente se repete para as faixas entre 8 e 12 s.m.,
+# chega a 67% para entre 12 e 16 s.m. e 100% para acima de 20 s.m.
+# 
+# > out <- format(round(prop.table(table(cut(tyu$Renda, breaks = 2*(0:13)), cut(tyu$IAA, breaks = (0:10))),1)*100,2), digits = 2)
+# > write.table(out, "prop_tyu_Renda_IAA.txt", sep=", ")
+# > out
+# 
+#           (0,1]    (1,2]    (2,3]    (3,4]    (4,5]    (5,6]    (6,7]    (7,8]    (8,9]    (9,10]  
+# (0,2]   "  0.00" "  0.65" "  5.83" " 25.76" " 42.89" " 21.60" "  3.02" "  0.24" "  0.00" "  0.00"
+# (2,4]   "  0.00" "  0.00" "  0.20" "  3.44" " 25.51" " 46.51" " 21.81" "  2.53" "  0.00" "  0.00"
+# (4,6]   "  0.00" "  0.00" "  1.33" "  1.06" " 11.14" " 40.05" " 36.07" "  9.28" "  1.06" "  0.00"
+# (6,8]   "  0.00" "  0.00" "  0.00" "  4.76" " 12.70" " 33.33" " 36.51" " 12.70" "  0.00" "  0.00"
+# (8,10]  "  0.00" "  0.00" "  0.00" "  0.00" "  6.90" " 24.14" " 41.38" " 24.14" "  3.45" "  0.00"
+# (10,12] "  0.00" "  0.00" "  0.00" "  0.00" " 40.00" " 20.00" " 10.00" " 10.00" " 20.00" "  0.00"
+# (12,14] "  0.00" "  0.00" "  0.00" "  0.00" "  0.00" " 50.00" " 50.00" "  0.00" "  0.00" "  0.00"
+# (14,16] "  0.00" "  0.00" "  0.00" "  0.00" " 60.00" " 40.00" "  0.00" "  0.00" "  0.00" "  0.00"
+# (16,18] "   NaN" "   NaN" "   NaN" "   NaN" "   NaN" "   NaN" "   NaN" "   NaN" "   NaN" "   NaN"
+# (18,20] "   NaN" "   NaN" "   NaN" "   NaN" "   NaN" "   NaN" "   NaN" "   NaN" "   NaN" "   NaN"
+# (20,22] "   NaN" "   NaN" "   NaN" "   NaN" "   NaN" "   NaN" "   NaN" "   NaN" "   NaN" "   NaN"
+# (22,24] "  0.00" "  0.00" "  0.00" "  0.00" "  0.00" "100.00" "  0.00" "  0.00" "  0.00" "  0.00"
+# (24,26] "  0.00" "  0.00" "  0.00" "  0.00" "  0.00" "100.00" "  0.00" "  0.00" "  0.00" "  0.00"
+
+out <- format(round(prop.table(table(cut(tyu$Renda, breaks = 2*(0:13)), cut(tyu$IAA, breaks = (0:10))),1)*100,2), digits = 2)
+write.table(out, "prop_tyu_Renda_IAA.txt", sep=", ")
+
+# > out <- format(round(prop.table(table(cut(tyu$Renda, breaks = 4*(0:6)), cut(tyu$IAA, breaks = 5*(0:2))),1)*100,2), digits = 2)
+# > out
+# 
+#         (0,5] (5,10]
+# (0,4]   " 66" " 34" 
+# (4,8]   " 14" " 86" 
+# (8,12]  " 15" " 85" 
+# (12,16] " 33" " 67" 
+# (16,20] "NaN" "NaN" 
+# (20,24] "  0" "100" 
+
+out <- format(round(prop.table(table(cut(tyu$Renda, breaks = 4*(0:6)), cut(tyu$IAA, breaks = 5*(0:2))),1)*100,2), digits = 2)
+write.table(out, "prop_tyu_Renda_IAA.txt", sep=", ")
+
+
+print("Química:Integral:>=3sm:")
+print.table(100*tb/nr)
+
+# ###############################################################################################################
+
+# FIM DO TRABALHO
+
+# ###############################################################################################################
+
+
+
+
+
+#CODE: Using CrossTable function
+#library(gmodels)
+#out <- capture.output(CrossTable(tyu.df$Curso, tyu.df$Opinião))
+#cat("cross_tyu_Curso_Opiniao", out, file="cross_tyu_Curso_Opiniao.txt", sep="n", append=FALSE)
+
+#install.packages("questionr")
+#library("questionr")
+
+#out <- round(prop.table(table(tyu.df$Curso, tyu.df$Opinião, tyu.df$Turno),3)*100,2)
+#cat("prop_tyu_Curso_Opiniao_Turno", out, file="prop_tyu_Curso_Opiniao_Turno.txt", sep="n", append=FALSE)
+
