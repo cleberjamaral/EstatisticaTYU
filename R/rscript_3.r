@@ -132,6 +132,11 @@ message("A diferença entre o desvio padrão da renda do populacional dividido p
 # resultados das amostras corroboram esta afirmação (usem os gráficos apropriados2
 # ).JUSTIFIQUE.
 
+plot(density(amostras004[[sample(1:1000,1,replace=T)]]$Renda), main="Distribuição 'renda': amostragem de 4") # Arbitrada uma amostragem qualquer das 1000 obtidas
+plot(density(amostras016[[sample(1:1000,1,replace=T)]]$Renda), main="Distribuição 'renda': amostragem de 16") # Arbitrada uma amostragem qualquer das 1000 obtidas
+plot(density(amostras064[[sample(1:1000,1,replace=T)]]$Renda), main="Distribuição 'renda': amostragem de 64") # Arbitrada uma amostragem qualquer das 1000 obtidas
+plot(density(amostras256[[sample(1:1000,1,replace=T)]]$Renda), main="Distribuição 'renda': amostragem de 256") # Arbitrada uma amostragem qualquer das 1000 obtidas
+plot(density(dttbtyu$Renda), main="Distribuição 'renda': população")
 
 ###############################################################################################################
 # d) Obtenha os intervalos de 95% de confiança para as 1000 amostras de cada tamanho.
