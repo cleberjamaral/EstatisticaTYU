@@ -27,7 +27,7 @@ rm(list=ls())
 # Adicionando bibliotecas
 library(readxl) # Para importar dados do excel
 library(data.table) # Para trabalhar com dados aleatorios ja que a tabela é indexada
-
+library(plotrix) # Para plotar graficos dos intervalos de confiança
 # ##############################################################################################################
 # Adicionando funções
 diffperc <- function(x,y) {round(100*abs(x-y)/x, digits = 2)} # Retorna a diferença percentual entre 2 valores
@@ -97,6 +97,8 @@ for (i in 1:1000)
   media256[i] = mean(amostras256[[i]]$Renda)
 }
 mediapop = mean(dttbtyu$Renda)
+
+message(" - - - > 1a")
 message("A diferença entre a renda média populacional e a média das médias das amostragens de   4 registros é: ",
         diffperc(mediapop,mean(media004)),"%")
 message("A diferença entre a renda média populacional e a média das médias das amostragens de  16 registros é: ",
@@ -115,6 +117,7 @@ message("A diferença entre a renda média populacional e a média das médias d
 # eles serão tão mais próximos à medida que aumenta o tamanho da amostra. As amostras
 # retiradas confirmam essa afirmação? JUSTIFIQUE.
 
+message(" - - - > 1b")
 message("A diferença entre o desvio padrão da renda do populacional dividido pela raiz do número de amostras e do desvio padrão da médias das amostras de   4 registros é: ",
         diffperc(sd(dttbtyu$Renda)/sqrt(4),sd(media004)),"%")
 message("A diferença entre o desvio padrão da renda do populacional dividido pela raiz do número de amostras e do desvio padrão da médias das amostras de  16 registros é: ",
@@ -132,6 +135,7 @@ message("A diferença entre o desvio padrão da renda do populacional dividido p
 # resultados das amostras corroboram esta afirmação (usem os gráficos apropriados2
 # ).JUSTIFIQUE.
 
+#installmessage(" - - - > 1c")
 plot(density(amostras004[[sample(1:1000,1,replace=T)]]$Renda), main="Distribuição 'renda': amostragem de 4") # Arbitrada uma amostragem qualquer das 1000 obtidas
 plot(density(amostras016[[sample(1:1000,1,replace=T)]]$Renda), main="Distribuição 'renda': amostragem de 16") # Arbitrada uma amostragem qualquer das 1000 obtidas
 plot(density(amostras064[[sample(1:1000,1,replace=T)]]$Renda), main="Distribuição 'renda': amostragem de 64") # Arbitrada uma amostragem qualquer das 1000 obtidas
@@ -144,6 +148,31 @@ plot(density(dttbtyu$Renda), main="Distribuição 'renda': população")
 # concluir sobre a precisão dos intervalos à medida que aumenta o tamanho de amostra?
 # JUSTIFIQUE.
 
+# Para 95% de confiança, zc = 1.96. Pelo teorema do limite central, para tamanhos de amostras superiores a 30
+# a distribuição das médias tende a ser normal. O nivel de conficanca c é o intervalo entre -zc e +zc. A area
+# que sobra é de 1 - c, portanto, cada cauda tem area (1 - c)/2. A margem de erro é E = (zc * sd)/sqrt(n)
 
+message(" - - - > 1d")
+Zc = 1.96 # Obtido da tabela de distribuiçào normal padrão
+e004 = (Zc * sd(media004)) / sqrt(4)
+e016 = (Zc * sd(media016)) / sqrt(16)
+e064 = (Zc * sd(media064)) / sqrt(64)
+e256 = (Zc * sd(media256)) / sqrt(256)
+message("Com 95% de confiança pode-se dizer que a média populacional está entre ",
+        round(mean(media004)-e004, digits = 2)," e ", round(mean(media004)+e004, digits = 2)," para tamanho   4")
+message("Com 95% de confiança pode-se dizer que a média populacional está entre ",
+        round(mean(media016)-e016, digits = 2)," e ", round(mean(media016)+e016, digits = 2)," para tamanho  16")
+message("Com 95% de confiança pode-se dizer que a média populacional está entre ",
+        round(mean(media064)-e064, digits = 2)," e ", round(mean(media064)+e064, digits = 2)," para tamanho  64")
+message("Com 95% de confiança pode-se dizer que a média populacional está entre ",
+        round(mean(media256)-e256, digits = 2)," e ", round(mean(media256)+e256, digits = 2)," para tamanho 256")
+message("A média populacional é ", round(mediapop, digits = 2))
 
+xplot <- c(4,16,64,256)
+yplot <- c(mediapop,mediapop,mediapop,mediapop)
+lplot <- c(mean(media004)-e004,mean(media016)-e016,mean(media064)-e064,mean(media256)-e256)
+uplot <- c(mean(media004)+e004,mean(media016)+e016,mean(media064)+e064,mean(media256)+e256)
+
+require(plotrix)
+plotCI(xplot, yplot, ui=uplot, li=lplot, main="Intervalos de confiança para os tamanhos das amostragens")
 ###############################################################################################################
