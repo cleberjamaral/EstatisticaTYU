@@ -97,10 +97,17 @@ for (i in 1:1000)
   media256[i] = mean(amostras256[[i]]$Renda)
 }
 mediapop = mean(dttbtyu$Renda)
-message("A diferença entre a renda média populacional e a média das médias das amostragens de   4 registros é: ",diffperc(mediapop,mean(media004)),"%")
-message("A diferença entre a renda média populacional e a média das médias das amostragens de  16 registros é: ",diffperc(mediapop,mean(media016)),"%")
-message("A diferença entre a renda média populacional e a média das médias das amostragens de  64 registros é: ",diffperc(mediapop,mean(media064)),"%")
-message("A diferença entre a renda média populacional e a média das médias das amostragens de 256 registros é: ",diffperc(mediapop,mean(media256)),"%")
+message("A diferença entre a renda média populacional e a média das médias das amostragens de   4 registros é: ",
+        diffperc(mediapop,mean(media004)),"%")
+message("A diferença entre a renda média populacional e a média das médias das amostragens de  16 registros é: ",
+        diffperc(mediapop,mean(media016)),"%")
+message("A diferença entre a renda média populacional e a média das médias das amostragens de  64 registros é: ",
+        diffperc(mediapop,mean(media064)),"%")
+message("A diferença entre a renda média populacional e a média das médias das amostragens de 256 registros é: ",
+        diffperc(mediapop,mean(media256)),"%")
+
+# Observa-se que de fato a média das médias é praticamente igual a média populacional, sendo menos de 1% diferentes
+# uma da outra. De fato ao aumentar o tamanho da amostragem a diferença é ainda menor, bem próxima de zero.
 
 ###############################################################################################################
 # b) Além do que foi dito acima, admite-se que o desvio padrão das médias amostrais será
@@ -108,10 +115,14 @@ message("A diferença entre a renda média populacional e a média das médias d
 # eles serão tão mais próximos à medida que aumenta o tamanho da amostra. As amostras
 # retiradas confirmam essa afirmação? JUSTIFIQUE.
 
-message("A diferença entre o desvio padrão da renda do populacional dividido pela raiz do número de amostras e do desvio padrão da médias das amostras de   4 registros é: ",diffperc(sd(dttbtyu$Renda)/sqrt(4),sd(media004)),"%")
-message("A diferença entre o desvio padrão da renda do populacional dividido pela raiz do número de amostras e do desvio padrão da médias das amostras de  16 registros é: ",diffperc(sd(dttbtyu$Renda)/sqrt(16),sd(media016)),"%")
-message("A diferença entre o desvio padrão da renda do populacional dividido pela raiz do número de amostras e do desvio padrão da médias das amostras de  64 registros é: ",diffperc(sd(dttbtyu$Renda)/sqrt(64),sd(media064)),"%")
-message("A diferença entre o desvio padrão da renda do populacional dividido pela raiz do número de amostras e do desvio padrão da médias das amostras de 256 registros é: ",diffperc(sd(dttbtyu$Renda)/sqrt(256),sd(media256)),"%")
+message("A diferença entre o desvio padrão da renda do populacional dividido pela raiz do número de amostras e do desvio padrão da médias das amostras de   4 registros é: ",
+        diffperc(sd(dttbtyu$Renda)/sqrt(4),sd(media004)),"%")
+message("A diferença entre o desvio padrão da renda do populacional dividido pela raiz do número de amostras e do desvio padrão da médias das amostras de  16 registros é: ",
+        diffperc(sd(dttbtyu$Renda)/sqrt(16),sd(media016)),"%")
+message("A diferença entre o desvio padrão da renda do populacional dividido pela raiz do número de amostras e do desvio padrão da médias das amostras de  64 registros é: ",
+        diffperc(sd(dttbtyu$Renda)/sqrt(64),sd(media064)),"%")
+message("A diferença entre o desvio padrão da renda do populacional dividido pela raiz do número de amostras e do desvio padrão da médias das amostras de 256 registros é: ",
+        diffperc(sd(dttbtyu$Renda)/sqrt(256),sd(media256)),"%")
 
 ###############################################################################################################
 # c) Outra característica muito importante do teorema central do limite é que a distribuição
