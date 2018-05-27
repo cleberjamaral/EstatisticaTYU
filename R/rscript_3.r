@@ -58,10 +58,9 @@ colnames(newtyu) = c("Curso", "Turno", "EnsinoMedio", "Opiniao", "Renda", "NotaE
 # Primeira parte – Distribuição Amostral da Média
 # 1) Usando qualquer aplicativo que considere apropriado1
 # 
-# proceda a retirada de 1000 amostras
-# aleatórias da variável Renda (primeiramente exclua as linhas com dados perdidos), com os
-# seguintes tamanhos: 4, 16, 64 e 256 elementos. Com base nos resultados encontrados responda os
-# itens a seguir:
+# proceda a retirada de 1000 amostras aleatórias da variável Renda (primeiramente exclua as linhas
+# com dados perdidos), com os seguintes tamanhos: 4, 16, 64 e 256 elementos. Com base nos resultados 
+# encontrados responda os itens a seguir:
 
 #Obtendo amostras probabilisticas
 amostras004 <- list()
@@ -176,3 +175,111 @@ uplot <- c(mean(media004)+e004,mean(media016)+e016,mean(media064)+e064,mean(medi
 require(plotrix)
 plotCI(xplot, yplot, ui=uplot, li=lplot, main="Intervalos de confiança para os tamanhos das amostragens")
 ###############################################################################################################
+
+# Segunda parte – Análise da variável Nota no ENEM
+# 2) Há uma grande preocupação em estimar o comportamento da variável Nota no ENEM dos
+# alunos, de maneira a caracterizar melhor seu o perfil. Alguém da universidade sugeriu que você
+# retirasse uma amostra de 25 alunos e registrasse os valores de Nota no ENEM. Considere que a
+# variância populacional de Nota no ENEM é DESCONHECIDA. Com base nos resultados
+# encontrados responda os itens a seguir (lembre-se de excluir inicialmente as linhas com dados perdidos).
+
+# Dos slides do professor: Ver inferencia estatistica slide 16
+
+amostras025 <- list()
+amostras025 = dttbtyu[sample(.N, 025)]
+
+# a) Construa um gráfico de probabilidade normal para os valores da amostra.
+# a.1 - É possível considerar que os dados provêm de uma população com distribuição
+# normal? JUSTIFIQUE.
+
+message(" - - - > 2a")
+
+qqnorm(amostras025$NotaENEM)
+qqline(amostras025$NotaENEM)
+
+message("Sim, a distribuição se aproxima de uma normal, porém a quantidade de elementos é pequena.")
+
+
+# a.2 – Com base na resposta da letra a.1 você recomendaria a utilização de técnicas
+# como Intervalo de confiança e teste paramétrico de média? JUSTIFIQUE.
+
+# Sim, utilizando distribuição t.
+
+# b) Independente dos resultados da letra a), encontre o intervalo de 95% de confiança para a
+# média populacional da Idade dos hóspedes. Interprete o resultado.
+
+# De acordo com a tabela t para 24 graus de liberdade (25-1) e intervalo de confiança de 95%
+# o valor de tc é 2.064. Neste caso E = tc * (s / sqrt(n))
+
+message(" - - - > 2b")
+
+media025 = mean(amostras025$NotaENEM)
+mediaRealENEM = mean(newtyu$NotaENEM)
+
+tc = 2.064
+S = sd(amostras025$NotaENEM)
+e025 = (tc * S) / sqrt(25)
+message("O Intervalo de confiança para a média da nota do ENEM está entre ", round(media025-e025, digits = 2),
+        " e ", round(media025+e025, digits = 2), 
+        ", a média das amostras foi de ", round(media025, digits = 2),
+        ", a margem de erro é de ", round(e025, digits = 2), " pontos ",
+        " e, para referência, a média populacional é ", round(mediaRealENEM, digits = 2))
+
+# c) Independente dos resultados da letra a), qual seria o tamanho mínimo de amostra
+# necessário para obter um intervalo de 95% de confiança para a média populacional da Nota
+# no ENEM, com uma precisão de 5 pontos? A amostra coletada é suficiente? JUSTIFIQUE.
+
+# Dado uma margem de erro E e um nível de confiança o tamanho mínimo de amostra é dado por:
+# n0 = (z^2 * var^2) / (E0^2) Barbetta p.190
+# Supondo desconhecer a variância, vamos utilizar a variância desta amostra de 25 elementos como
+# base. Para um E0 de 5 pontos conforme dado
+
+message(" - - - > 2c")
+
+# O nível de confiança c dado é de 95% que leva a um Zc de 1.96 conforme tabela
+# O erro E dado é de 5 pontos e um Zc de 1.96 que se refere ao intervalod e confiança de 95% conforme tabela
+
+E0 = 5
+Zc = 1.96
+n0 = (Zc^2 * S^2) / (E0^2)
+
+message("Não é suficiente, para um nível de confiança de 95% e 5 pontos de erro tolerado, o tamanho mínimo ",
+        "seria de ",round(n0, digits = 2)," elementos.")
+
+N = nrow(dttbtyu)
+n = (N * n0) / (N + n0)
+
+message("Como o tamanho da população é conhecido, sendo de ", N, " elementos, o n mais precisamente",
+        " seria de ",round(n, digits = 2)," elementos.")
+
+
+# d) Independente dos resultados da letra a), a direção da TYU acredita que a média de Nota
+# no ENEM dos alunos é maior do que 450 pontos, por pesquisas anteriores. Aplicando o teste
+# estatístico apropriado, os dados confirmam isso, a 5% de significância? JUSTIFIQUE.
+
+
+message(" - - - > 2c")
+message("A direção espera que a média é maior que 450, vamos considerar então como H0 supondo que ",
+        "a média das notas do ENEM é menor que 450.")
+message("A média amostral para estes 25 elementos é ",media025)
+message("O desvio padrão desta amostra de 25 elementos é ",S)
+
+
+# e) Analise o intervalo de confiança da letra b). Os limites encontrados corroboram os
+# resultados encontrados na letra d)? JUSTIFIQUE.
+
+
+
+# f) Independente dos resultados da letra a), suponha 5% de significância e o desvio padrão
+# amostral como boa estimativa do desvio padrão populacional. Se a média real da Nota no
+# ENEM fosse de 470 pontos, qual seria o poder do teste? Você acha o valor aceitável? JUSTIFIQUE.
+
+
+
+
+# g) Independente dos resultados da letra a), qual deveria ser o tamanho mínimo de amostra
+# para detectar com 95% de probabilidade que a média da Nota no ENEM dos alunos é igual a
+# 470 pontos. Suponha 5% de significância e o desvio padrão amostral como boa estimativa
+# do desvio padrão populacional. A amostra coletada é suficiente? JUSTIFIQUE.
+
+
