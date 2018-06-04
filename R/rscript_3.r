@@ -28,6 +28,8 @@ rm(list=ls())
 library(readxl) # Para importar dados do excel
 library(data.table) # Para trabalhar com dados aleatorios ja que a tabela é indexada
 library(plotrix) # Para plotar graficos dos intervalos de confiança
+library(pwr) # Para calculo do poder do teste
+library(e1071) # Para calculo da curtose
 # ##############################################################################################################
 # Adicionando funções
 diffperc <- function(x,y) {round(100*abs(x-y)/x, digits = 2)} # Retorna a diferença percentual entre 2 valores
@@ -97,7 +99,7 @@ for (i in 1:1000)
 }
 mediapop = mean(dttbtyu$Renda)
 
-message(" - - - > 1a")
+message("\n - - - > 1a")
 message("A diferença entre a renda média populacional e a média das médias das amostragens de   4 registros é: ",
         diffperc(mediapop,mean(media004)),"%")
 message("A diferença entre a renda média populacional e a média das médias das amostragens de  16 registros é: ",
@@ -116,7 +118,7 @@ message("A diferença entre a renda média populacional e a média das médias d
 # eles serão tão mais próximos à medida que aumenta o tamanho da amostra. As amostras
 # retiradas confirmam essa afirmação? JUSTIFIQUE.
 
-message(" - - - > 1b")
+message("\n - - - > 1b")
 message("A diferença entre o desvio padrão da renda do populacional dividido pela raiz do número de amostras e do desvio padrão da médias das amostras de   4 registros é: ",
         diffperc(sd(dttbtyu$Renda)/sqrt(4),sd(media004)),"%")
 message("A diferença entre o desvio padrão da renda do populacional dividido pela raiz do número de amostras e do desvio padrão da médias das amostras de  16 registros é: ",
@@ -151,20 +153,62 @@ plot(density(dttbtyu$Renda), main="Distribuição 'renda': população")
 # a distribuição das médias tende a ser normal. O nivel de conficanca c é o intervalo entre -zc e +zc. A area
 # que sobra é de 1 - c, portanto, cada cauda tem area (1 - c)/2. A margem de erro é E = (zc * sd)/sqrt(n)
 
-message(" - - - > 1d")
+message("\n - - - > 1d")
 Zc = 1.96 # Obtido da tabela de distribuiçào normal padrão
 e004 = (Zc * sd(media004)) / sqrt(4)
 e016 = (Zc * sd(media016)) / sqrt(16)
 e064 = (Zc * sd(media064)) / sqrt(64)
 e256 = (Zc * sd(media256)) / sqrt(256)
+
+getmode <- function(v) {
+  uniqv <- unique(v)
+  uniqv[which.max(tabulate(match(v, uniqv)))]
+}
+
+k = kurtosis(media004)
+me = mean(media004)
+mn = median(media004)
+md = getmode(media004)
 message("Com 95% de confiança pode-se dizer que a média populacional está entre ",
-        round(mean(media004)-e004, digits = 2)," e ", round(mean(media004)+e004, digits = 2)," para tamanho   4")
+        round(mean(media004)-e004, digits = 2)," e ", round(mean(media004)+e004, digits = 2)," para tamanho   4 ",
+        "\n> Média     : ", round(mean(media004), digits = 2)," Mediana: ",round(median(media004), digits = 2), "     Moda: ",round(getmode(media004), digits = 2),
+        "\n> Curtose   : ", round(k, digits = 2)," ",
+        "Assimetria: ",round(skewness(media004), digits = 2))
+if (k == 0.263) message("> Curva mesocúrtica") else if (k > 0.263) message("> Curva platocúrtica") else message("> Curva leptocúrtica") 
+if ((me == mn) && (me == md)) message("> Curva simética") else if ((me > mn) && (me > md)) message("> Curva assimétrica a direita") else message("> Curva assimétrica a esquerda") 
+k = kurtosis(media016)
+me = mean(media004)
+mn = median(media004)
+md = getmode(media004)
 message("Com 95% de confiança pode-se dizer que a média populacional está entre ",
-        round(mean(media016)-e016, digits = 2)," e ", round(mean(media016)+e016, digits = 2)," para tamanho  16")
+        round(mean(media016)-e016, digits = 2)," e ", round(mean(media016)+e016, digits = 2)," para tamanho  16 ",
+        "\n> Média     : ", round(mean(media016), digits = 2)," Mediana: ",round(median(media016), digits = 2), "     Moda: ",round(getmode(media016), digits = 2),
+        "\n> Curtose   : ",round(k, digits = 2)," ",
+        "Assimetria: ",round(skewness(media016), digits = 2))
+if (k == 0.263) message("> Curva mesocúrtica") else if (k > 0.263) message("> Curva platocúrtica") else message("> Curva leptocúrtica") 
+if ((me == mn) && (me == md)) message("> Curva simética") else if ((me > mn) && (me > md)) message("> Curva assimétrica a direita") else message("> Curva assimétrica a esquerda") 
+k = kurtosis(media064)
+me = mean(media004)
+mn = median(media004)
+md = getmode(media004)
 message("Com 95% de confiança pode-se dizer que a média populacional está entre ",
-        round(mean(media064)-e064, digits = 2)," e ", round(mean(media064)+e064, digits = 2)," para tamanho  64")
+        round(mean(media064)-e064, digits = 2)," e ", round(mean(media064)+e064, digits = 2)," para tamanho  64 ",
+        "\n> Média     : ", round(mean(media064), digits = 2)," Mediana: ",round(median(media064), digits = 2), "     Moda: ",round(getmode(media064), digits = 2),
+        "\n> Curtose   : ",round(k, digits = 2)," ",
+        "Assimetria: ",round(skewness(media064), digits = 2))
+if (k == 0.263) message("> Curva mesocúrtica") else if (k > 0.263) message("> Curva platocúrtica") else message("> Curva leptocúrtica") 
+if ((me == mn) && (me == md)) message("> Curva simética") else if ((me > mn) && (me > md)) message("> Curva assimétrica a direita") else message("> Curva assimétrica a esquerda") 
+k = kurtosis(media256)
+me = mean(media004)
+mn = median(media004)
+md = getmode(media004)
 message("Com 95% de confiança pode-se dizer que a média populacional está entre ",
-        round(mean(media256)-e256, digits = 2)," e ", round(mean(media256)+e256, digits = 2)," para tamanho 256")
+        round(mean(media256)-e256, digits = 2)," e ", round(mean(media256)+e256, digits = 2)," para tamanho 256 ",
+        "\n> Média     : ", round(mean(media256), digits = 2)," Mediana: ",round(median(media256), digits = 2), "     Moda: ",round(getmode(media256), digits = 2),
+        "\n> Curtose   : ",round(k, digits = 2)," ",
+        "Assimetria: ",round(skewness(media256), digits = 2))
+if (k == 0.263) message("> Curva mesocúrtica") else if (k > 0.263) message("> Curva platocúrtica") else message("> Curva leptocúrtica") 
+if ((me == mn) && (me == md)) message("> Curva simética") else if ((me > mn) && (me > md)) message("> Curva assimétrica a direita") else message("> Curva assimétrica a esquerda") 
 message("A média populacional é ", round(mediapop, digits = 2))
 
 xplot <- c(4,16,64,256)
@@ -185,14 +229,15 @@ plotCI(xplot, yplot, ui=uplot, li=lplot, main="Intervalos de confiança para os 
 
 # Dos slides do professor: Ver inferencia estatistica slide 16
 
+n = 25
 amostras025 <- list()
-amostras025 = dttbtyu[sample(.N, 025)]
+amostras025 = dttbtyu[sample(.N, n)]
 
 # a) Construa um gráfico de probabilidade normal para os valores da amostra.
 # a.1 - É possível considerar que os dados provêm de uma população com distribuição
 # normal? JUSTIFIQUE.
 
-message(" - - - > 2a")
+message("\n - - - > 2a")
 
 qqnorm(amostras025$NotaENEM)
 qqline(amostras025$NotaENEM)
@@ -211,14 +256,14 @@ message("Sim, a distribuição se aproxima de uma normal, porém a quantidade de
 # De acordo com a tabela t para 24 graus de liberdade (25-1) e intervalo de confiança de 95%
 # o valor de tc é 2.064. Neste caso E = tc * (s / sqrt(n))
 
-message(" - - - > 2b")
+message("\n - - - > 2b")
 
 media025 = mean(amostras025$NotaENEM)
 mediaRealENEM = mean(newtyu$NotaENEM)
 
-tc = 2.064
+tc = qt(0.975, df=n-1) # 2.064 http://www.stats4stem.org/r-t-distribution
 S = sd(amostras025$NotaENEM)
-e025 = (tc * S) / sqrt(25)
+e025 = (tc * S) / sqrt(n)
 message("O Intervalo de confiança para a média da nota do ENEM está entre ", round(media025-e025, digits = 2),
         " e ", round(media025+e025, digits = 2), 
         ", a média das amostras foi de ", round(media025, digits = 2),
@@ -234,17 +279,17 @@ message("O Intervalo de confiança para a média da nota do ENEM está entre ", 
 # Supondo desconhecer a variância, vamos utilizar a variância desta amostra de 25 elementos como
 # base. Para um E0 de 5 pontos conforme dado
 
-message(" - - - > 2c")
+message("\n - - - > 2c")
 
 # O nível de confiança c dado é de 95% que leva a um Zc de 1.96 conforme tabela
-# O erro E dado é de 5 pontos e um Zc de 1.96 que se refere ao intervalod e confiança de 95% conforme tabela
+# O erro E dado é de 5 pontos e um Zc de 1.96 para a confiança c dada
 
 E0 = 5
 Zc = 1.96
 n0 = (Zc^2 * S^2) / (E0^2)
 
-message("Não é suficiente, para um nível de confiança de 95% e 5 pontos de erro tolerado, o tamanho mínimo ",
-        "seria de ",round(n0, digits = 2)," elementos.")
+message("Não é suficiente, para um nível de confiança de 95% (Zc de 1.96 desvios padrão) e 5 pontos de erro tolerado ", 
+        "o tamanho mínimo seria de ",round(n0, digits = 2)," elementos.")
 
 N = nrow(dttbtyu)
 n = (N * n0) / (N + n0)
@@ -252,29 +297,53 @@ n = (N * n0) / (N + n0)
 message("Como o tamanho da população é conhecido, sendo de ", N, " elementos, o n mais precisamente",
         " seria de ",round(n, digits = 2)," elementos.")
 
-
 # d) Independente dos resultados da letra a), a direção da TYU acredita que a média de Nota
 # no ENEM dos alunos é maior do que 450 pontos, por pesquisas anteriores. Aplicando o teste
 # estatístico apropriado, os dados confirmam isso, a 5% de significância? JUSTIFIQUE.
 
 
-message(" - - - > 2c")
+message("\n - - - > 2d")
 message("A direção espera que a média é maior que 450, vamos considerar então como H0 supondo que ",
-        "a média das notas do ENEM é menor que 450.")
+        "a média das notas do ENEM é menor ou igual a  450. Logo, H1 diz que a nota é maior que 450.")
+message("Como H1 tem o sinal > isso leva este teste a ser de cauda a direita.")
+message("Basicamente é necessário obter o valor-p, se valor-p <= alpha então rejeita-se H0.")
+message("Como é uma amostra de menos de 30 elementos será utilizado o teste-t (no lugar do teste-z).")
+alpha = 0.05
+mediaH = 450
+t0 = 1.711
+message("Pela tabela de distribuição t, para 24 graus de liberdade e alpha 0.05 uma cauda t0 = ",round(t0, digits = 2))
 message("A média amostral para estes 25 elementos é ",media025)
 message("O desvio padrão desta amostra de 25 elementos é ",S)
-
+t = (media025 - mediaH) * sqrt(n) / S
+message("O cálculo de t é dado por t = (mean(X) - mediaHipotetica) * sqrt(n) / S  = ", round(t, digits = 2) )
+if (t > t0) message("t é maior que t0, portanto com 95% de certeza a média das notas do ENEM é superior a 450 pontos") else message("t é menor ou igual a t0, portanto com 95% de certeza a média das notas do ENEM é inferior a 450 pontos")
 
 # e) Analise o intervalo de confiança da letra b). Os limites encontrados corroboram os
 # resultados encontrados na letra d)? JUSTIFIQUE.
 
+message("\n - - - > 2e")
 
+message("O Intervalo de confiança para a média da nota do ENEM ficou entre ", round(media025-e025, digits = 2),
+        " e ", round(media025+e025, digits = 2))
+if ((450 < media025-e025) & (450 < media025+e025)) message("Corrobora pois 450 é inferior ao intervalo") else message("Não corrobora pois 450 NÃO é inferior ao invervalo")
 
 # f) Independente dos resultados da letra a), suponha 5% de significância e o desvio padrão
 # amostral como boa estimativa do desvio padrão populacional. Se a média real da Nota no
 # ENEM fosse de 470 pontos, qual seria o poder do teste? Você acha o valor aceitável? JUSTIFIQUE.
 
+message("\n - - - > 2f")
 
+sig = 0.05 # alpha
+altern = "greater"
+mediaReal = 470
+stdP = sd(amostras025$NotaENEM)/sqrt(n)
+distStd = (mediaReal-mediaH)/stdP
+Zc = 1.711 # 1.711 24df one tail 0.05
+Xc = mediaH + Zc * S / sqrt(25)
+Zb = (Xc - mediaReal) / (S / sqrt(25))
+p = pwr.p.test(h = distStd, sig.level = sig, n = n, alternative = altern)
+
+message("power = ", p)
 
 
 # g) Independente dos resultados da letra a), qual deveria ser o tamanho mínimo de amostra
