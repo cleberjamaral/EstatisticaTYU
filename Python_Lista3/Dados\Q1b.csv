@@ -1,0 +1,6 @@
+,Desvio padrão amostral (N de sal. mín.),Desvio padrão amostral * sqrt(N),Erro (%)
+Desvio padrão de amostragem de tamanho 4,0.5964806707681314,1.1929613415362628,1.0246389750811824
+Desvio padrão de amostragem de tamanho 16,0.3075477669098737,1.2301910676394947,4.177398002357546
+Desvio padrão de amostragem de tamanho 64,0.14341756765094396,1.1473405412075517,2.8387090836473505
+Desvio padrão de amostragem de tamanho 256,0.07264772593175312,1.1623636149080498,1.5664963605305893
+Desvio padrão populacional,1.18086, -,0
