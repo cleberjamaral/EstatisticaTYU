@@ -1,5 +1,5 @@
-,Assimetria,Curtose
-Amostragem de tamanho 4,2.3533,12.9798
-Amostragem de tamanho 16,1.4105,4.377
-Amostragem de tamanho 64,0.6181,0.5744
-Amostragem de tamanho 256,0.2065,0.086
+,Limite inferior,Valor central,Limite superior,Erro
+0,1.2047,1.7566,2.3084,0.5519
+1,1.6258,1.7663,1.9068,0.1405
+2,1.7514,1.7887,1.826,0.0373
+3,1.7713,1.7801,1.7889,0.0088
