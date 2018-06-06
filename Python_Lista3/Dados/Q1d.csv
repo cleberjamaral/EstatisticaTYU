@@ -1,4 +1,5 @@
-,Número de ocorrências,Frequência relativa
-Noturno,80,0.4
-Integral,67,0.335
-Diurno,53,0.265
+,Assimetria,Curtose
+Amostragem de tamanho 4,2.3533,12.9798
+Amostragem de tamanho 16,1.4105,4.377
+Amostragem de tamanho 64,0.6181,0.5744
+Amostragem de tamanho 256,0.2065,0.086
