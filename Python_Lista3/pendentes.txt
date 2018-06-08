@@ -1,2 +1,1 @@
-2a - testar com varias curvas
-salvar amostras
+1a - 3 casas decimais
